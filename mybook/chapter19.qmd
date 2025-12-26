@@ -1,0 +1,384 @@
+# The Build vs. Configure Decision {#sec-build-vs-configure}
+
+*Choosing your approach*
+
+You understand agents. You see the value. Now comes a practical question: Do you configure existing tools (Claude Code, Cursor, etc.) with custom capabilities, or build your own agent system from scratch?
+
+This chapter provides a framework for making this decision, explores the trade-offs, and offers guidance on when each approach makes sense.
+
+## The Spectrum of Options
+
+It's not binary. There's a spectrum:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                               │
+│  Pure SaaS  →  Configured  →  Extended  →  Custom  →  Built  │
+│               Harness        Framework     Framework   from   │
+│                                                        Scratch│
+│                                                               │
+│  ChatGPT    Claude Code    + Custom      Anthropic    Pure   │
+│  as-is      + MCP tools    LangChain     API + own    API    │
+│                            setup         harness      calls   │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+    Low effort ←──────────────────────────────→ High effort
+    Low control ←─────────────────────────────→ High control
+```
+
+## Option 1: Configure Existing Harnesses
+
+**What it means:** Use Claude Code, Cursor, or similar tools. Add custom MCP servers for your systems.
+
+**Example:**
+```python
+# Build MCP server for your CRM
+from mcp.server import Server
+
+app = Server("company-crm")
+
+@app.tool()
+def get_customer(customer_id: str):
+    return crm_api.fetch_customer(customer_id)
+
+@app.tool()
+def create_ticket(customer_id: str, issue: str):
+    return crm_api.create_ticket(customer_id, issue)
+
+# Configure Claude Code to use it
+# Add to config file
+# Now Claude Code has CRM access
+```
+
+**Pros:**
+- Fast time to value (days, not months)
+- Leverage existing harness infrastructure
+- Proven, maintained platform
+- Good developer experience
+- Community and documentation
+
+**Cons:**
+- Limited by harness capabilities
+- Constrained customization
+- Tied to harness vendor
+- May not fit unique requirements
+- Less control over UX
+
+**When to use:**
+- Most practical business applications
+- Internal tools and automation
+- Prototyping and experimentation
+- When standard harness features suffice
+- When time-to-value matters most
+
+**Cost structure:**
+- Development: Low (build MCP servers only)
+- Operating: Moderate (LLM API costs)
+- Maintenance: Low (vendor maintains harness)
+
+## Option 2: Build from Scratch
+
+**What it means:** Direct API integration with LLM providers. Build your own harness, orchestration, and UI.
+
+**Example:**
+```python
+# Your own agent implementation
+class CustomAgent:
+    def __init__(self, model="claude-3-sonnet"):
+        self.model = model
+        self.tools = self.register_tools()
+        self.conversation_history = []
+
+    def run(self, user_input):
+        # Add user message
+        self.conversation_history.append({
+            "role": "user",
+            "content": user_input
+        })
+
+        while True:
+            # Call LLM
+            response = anthropic.messages.create(
+                model=self.model,
+                messages=self.conversation_history,
+                tools=self.tools
+            )
+
+            # Handle tool calls
+            if response.stop_reason == "tool_use":
+                for tool_call in response.content:
+                    if tool_call.type == "tool_use":
+                        result = self.execute_tool(
+                            tool_call.name,
+                            tool_call.input
+                        )
+                        self.conversation_history.append({
+                            "role": "tool",
+                            "content": result
+                        })
+                continue
+
+            # Final response
+            return response.content
+```
+
+**Pros:**
+- Maximum flexibility
+- Complete control over UX
+- Custom features
+- Vendor independence
+- Optimized for your specific needs
+
+**Cons:**
+- Significant development effort
+- Must build everything (context management, tool system, UI, logging, etc.)
+- Maintenance burden
+- Reinventing solved problems
+- Longer time to value
+
+**When to use:**
+- Building a product (not internal tool)
+- Unique UX requirements
+- Deep customization needed
+- Scale/performance requirements existing harnesses can't meet
+- After proving value with simpler approach
+
+**Cost structure:**
+- Development: High (months of engineering)
+- Operating: Moderate (same LLM costs as configured approach)
+- Maintenance: High (you own everything)
+
+## The Framework: Choosing Your Approach
+
+Ask these questions:
+
+### 1. What's your primary goal?
+
+**Internal automation / productivity:**
+→ Configure existing harness
+- Fast value
+- Good enough capabilities
+- Lower investment
+
+**External product / customer-facing:**
+→ Consider building
+- Custom UX needed
+- Branding requirements
+- Specific feature needs
+
+### 2. How unique are your requirements?
+
+**Standard use cases:**
+- Data analysis ✓ Configure
+- Code assistance ✓ Configure
+- Document processing ✓ Configure
+- Customer support ✓ Configure
+
+**Unique requirements:**
+- Novel interaction model → Build
+- Integration with rare systems → Maybe build
+- Specific performance constraints → Maybe build
+- Unusual tool execution model → Build
+
+### 3. What's your timeline?
+
+**Need results in weeks:** Configure
+
+**Can invest months:** Build
+
+**Want to experiment first:** Configure, then optionally rebuild
+
+### 4. What's your team's capability?
+
+**Small team, limited AI experience:**
+→ Configure
+- Lower complexity
+- Less to learn
+- Faster execution
+
+**Large team, strong engineering:**
+→ Can build if justified
+- Have capacity
+- Can maintain
+- Expertise available
+
+### 5. How critical is vendor independence?
+
+**Don't care / prefer established vendor:**
+→ Configure
+
+**Must avoid vendor lock-in:**
+→ Build (or use open frameworks)
+
+### 6. What's acceptable cost?
+
+**Optimize for time and lower development cost:**
+→ Configure
+
+**Can invest upfront for long-term optimization:**
+→ Build (if scale justifies)
+
+## The Recommended Path
+
+For most teams:
+
+**Phase 1: Prove value (Weeks 1-4)**
+```
+Use existing harness (Claude Code, Cursor)
+Build basic MCP tools for your systems
+Validate that agents solve your problem
+Measure impact
+```
+
+**Phase 2: Scale proven use cases (Months 2-6)**
+```
+Expand MCP tool coverage
+Add more use cases
+Optimize prompts and workflows
+Build team expertise
+```
+
+**Phase 3: Decide on custom build (Month 6+)**
+```
+Only if:
+- Proven significant value
+- Clear limitations of configured approach
+- Justifiable ROI on custom development
+- Team capacity available
+
+Otherwise: Keep configuring
+```
+
+**Most teams never need Phase 3.** Configured solutions handle most needs.
+
+## Frameworks: The Middle Ground
+
+**Use framework libraries (LangChain, LlamaIndex, etc.) when:**
+- Need more flexibility than configured harnesses
+- Don't want to build everything from scratch
+- Standard patterns meet needs
+- Want community support
+
+**Example with LangChain:**
+```python
+from langchain.agents import create_openai_tools_agent
+from langchain.tools import Tool
+
+# Define tools
+tools = [
+    Tool(
+        name="search_docs",
+        func=search_documentation,
+        description="Search company documentation"
+    ),
+    Tool(
+        name="query_db",
+        func=query_database,
+        description="Query customer database"
+    )
+]
+
+# Create agent
+agent = create_openai_tools_agent(
+    llm=ChatOpenAI(model="gpt-4"),
+    tools=tools
+)
+
+# Run
+result = agent.run("Find documentation about return policy")
+```
+
+**Pros of frameworks:**
+- Pre-built patterns
+- Community recipes
+- Faster than scratch
+- More flexible than pure config
+
+**Cons:**
+- Learning curve
+- Framework-specific concepts
+- May not fit perfectly
+- Dependency on framework
+
+## Real-World Decision Examples
+
+### Example 1: Internal Code Review Automation
+
+**Scenario:** Automate code reviews for internal team
+
+**Decision:** Configure Claude Code
+- Standard use case
+- Existing harness handles it
+- Custom tools for CI/CD integration
+- Value in weeks, not months
+
+**Outcome:** MCP server for CI integration, custom prompts, done in 2 weeks
+
+### Example 2: Customer-Facing Support Bot
+
+**Scenario:** AI support for thousands of customers
+
+**Decision:** Build custom
+- Customer-facing (UX critical)
+- Specific branding needs
+- Custom escalation workflows
+- Integration with legacy support system
+- Scale matters (thousands of concurrent users)
+
+**Outcome:** 3-month build, custom React UI, Anthropic API backend, full control
+
+### Example 3: Document Processing Pipeline
+
+**Scenario:** Process 10K documents/day, extract structured data
+
+**Decision:** Use framework (LangChain) with custom components
+- Standard pattern (RAG + extraction)
+- Framework provides structure
+- Custom extractors for domain-specific needs
+- Middle ground appropriate
+
+**Outcome:** 6 weeks with LangChain, custom extractors, deployed successfully
+
+## Warning Signs
+
+**Don't build when:**
+- ❌ Haven't proven value with simpler approach first
+- ❌ Underestimating effort ("we'll build in 2 weeks")
+- ❌ Trying to avoid learning existing tools
+- ❌ Team lacks maintenance capacity
+- ❌ Configured approach would work fine
+
+**Do build when:**
+- ✓ Clear limitations of existing solutions
+- ✓ Proven ROI justifies investment
+- ✓ Unique requirements truly need custom
+- ✓ Team has capacity and expertise
+- ✓ Long-term commitment to maintenance
+
+## What the Decision Is and Isn't
+
+**What it is:**
+- Pragmatic engineering trade-off
+- Context-dependent (right answer varies)
+- Re-evaluatable (can change approach)
+
+**What it's not:**
+- A one-time choice (can evolve)
+- Always "build" (configure is often best)
+- Always "configure" (sometimes custom is right)
+- A technical purity question (choose what works)
+
+## Practical Takeaways
+
+1. **Start with configuration** for most use cases
+2. **Prove value first** before investing in custom
+3. **Build only when justified** by clear limitations or requirements
+4. **Don't underestimate** build effort and maintenance
+5. **Consider frameworks** as middle ground
+6. **Re-evaluate periodically** as capabilities and needs change
+
+## Looking Ahead
+
+Whether you configure or build, you need a practical path to get started. The final chapter provides exactly that: a step-by-step approach to adopting agent systems in your organization, from first experiments to production deployment.
+
+The theory is complete. Now let's talk about execution.

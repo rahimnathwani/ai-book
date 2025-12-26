@@ -1,0 +1,467 @@
+# Agent Harnesses {#sec-agent-harnesses}
+
+*The software that makes agents practical*
+
+An LLM with access to tools sounds powerful in theory. But how do you actually build and run such a system? How does the agentic loop get executed? How do tools get called? How do humans interact with the agent?
+
+The answer is the **agent harness**—the infrastructure that turns an LLM into a practical, usable agent. Understanding what harnesses do and how they've evolved is essential for working with agents effectively.
+
+This chapter explores the role of agent harnesses, traces their evolution from simple chat interfaces to sophisticated CLI tools, and examines why coding-focused harnesses dominate the current state of the art.
+
+## What an Agent Harness Does
+
+An agent harness is the software that sits between the user and the LLM, managing all the machinery that makes agency possible.
+
+### Core Responsibilities
+
+**1. Managing the agentic loop**
+
+The harness implements the observe-reason-act-repeat cycle:
+- Sends the current state to the LLM
+- Receives the LLM's decision about what to do next
+- If the LLM wants to call a tool: Execute the tool
+- Add the tool's result to the context
+- Send the updated context back to the LLM
+- Repeat until the LLM signals completion (or limits are hit)
+
+This orchestration is non-trivial. The harness must:
+- Format tool results appropriately
+- Handle tool execution errors
+- Manage timeouts and retries
+- Detect when the agent is stuck in a loop
+- Enforce iteration limits
+
+**2. Providing tool infrastructure**
+
+Tools don't just magically work. The harness must:
+- Register available tools and their descriptions
+- Validate tool calls (correct parameters, types, etc.)
+- Execute tools safely (sandboxing, permissions)
+- Capture tool outputs
+- Format results for the LLM to understand
+- Handle tool failures gracefully
+
+**3. Managing the context window**
+
+As we learned in Chapter 2, context windows are large but not infinite. The harness must:
+- Track token usage
+- Decide what to keep when approaching limits
+- Summarize or remove old messages if needed
+- Optimize context to keep the most relevant information
+- Balance history (for coherence) with space (for tool results)
+
+**4. Providing user interface**
+
+Users need to:
+- Send tasks to the agent
+- See what the agent is doing
+- Interrupt if necessary
+- Review results
+- Access conversation history
+
+The harness provides this interface, whether it's a chat window, a command-line interface, or an API.
+
+**5. Managing security and sandboxing**
+
+Agents can execute code, access files, and call APIs. The harness must:
+- Sandbox execution environments
+- Enforce permissions
+- Prevent unauthorized access
+- Rate limit expensive operations
+- Log all actions for audit
+
+Without these safeguards, agents would be too dangerous to deploy.
+
+### What Harnesses Enable
+
+The harness transforms a stateless API call into a stateful, interactive agent:
+
+**Without a harness:**
+```
+You → API call → LLM → Text response → You
+```
+That's just text generation, not agency.
+
+**With a harness:**
+```
+You → Task description → Agent harness
+                       → LLM decides to search web
+                       → Harness executes search
+                       → LLM reads results, decides to read a file
+                       → Harness reads file
+                       → LLM synthesizes information
+                       → Harness presents final answer
+```
+
+The harness made the agent possible.
+
+## The Evolution of Consumer AI Interfaces
+
+To understand modern agent harnesses, it helps to see how we got here. The evolution has been rapid and dramatic.
+
+### Phase 1: Simple Text Generation (2020-2022)
+
+Early public LLM interfaces like GPT-3's Playground were essentially text completion tools:
+
+- You type a prompt
+- The model generates text
+- That's it
+
+No memory between sessions. No tools. No ability to access current information. If you asked "What's the weather today?" the model would hallucinate an answer based on its training data patterns, not actual weather.
+
+These weren't agents. They were impressive text generators, but limited to the knowledge baked into their training data.
+
+### Phase 2: Chat Interfaces with Memory (Late 2022)
+
+ChatGPT launched in November 2022 and introduced something crucial: **conversation memory within a session**.
+
+The interface maintained conversation history in context, so:
+```
+You: What's the capital of France?
+ChatGPT: The capital of France is Paris.
+You: What's the population?
+ChatGPT: The population of Paris is approximately 2.2 million...
+```
+
+The model understood "What's the population?" referred to Paris because the conversation history was in context.
+
+This was a better user experience, but still not agency. The model still couldn't access real-time information or take actions. It could only generate text based on training data and conversation history.
+
+### Phase 3: Agents with Tools (2023-Present)
+
+The transformation happened when chat interfaces became agent harnesses by adding tools.
+
+**ChatGPT with plugins (2023):**
+- Web browsing plugin: Agent can search and read websites
+- Code interpreter: Agent can write and execute Python code
+- Third-party plugins: Access to specialized services
+
+**Claude.ai with tools:**
+- Web search: Access to current information
+- Document analysis: Upload and analyze files
+- Citations: Link to sources
+
+Suddenly, asking "What's the weather today?" could work:
+1. Agent recognizes it needs current information
+2. Agent uses web search tool
+3. Agent finds current weather
+4. Agent provides accurate answer
+
+These interfaces evolved from text generators to full agent harnesses.
+
+### The Current State
+
+Modern consumer AI interfaces are sophisticated agent harnesses:
+
+**What they provide:**
+- Conversation management (context window handling)
+- Multiple tools (search, code execution, document analysis)
+- File uploads and downloads
+- Session persistence
+- Safety guardrails
+- User controls (stop, regenerate, edit)
+
+**What they don't yet provide well:**
+- Access to your local file system
+- Ability to run arbitrary commands on your computer
+- Integration with your development workflows
+- Deep customization of available tools
+
+That last limitation is where CLI-based agent harnesses excel.
+
+## The Current State of the Art: CLI-Based Agent Harnesses
+
+The most powerful agent harnesses available today are command-line tools designed primarily for coding tasks. But as we'll see, they're actually general-purpose agents hiding in developer clothes.
+
+### Major CLI Agent Harnesses
+
+**Claude Code CLI**
+- Developed by Anthropic for Claude models
+- File system access (read, write, edit)
+- Command execution (run terminal commands)
+- Git integration
+- Web search and fetch
+- Full development workflow support
+
+**GitHub Copilot Workspace / Codex CLI**
+- Integrated with GitHub
+- Code generation and editing
+- Repository understanding
+- Pull request and issue integration
+
+**Cursor / Cursor Agent Mode**
+- IDE integration (VS Code fork)
+- Real-time code editing
+- Codebase awareness
+- Terminal access
+- Multi-file operations
+
+**Gemini CLI**
+- Google's offering
+- Similar capabilities to Claude Code
+- File system and command access
+- Integration with Google services
+
+### Why CLI? The Architecture Makes Sense
+
+CLI-based harnesses excel because:
+
+**1. File system access**
+
+Agents can read any file, write new files, and edit existing ones. This enables:
+- Reading code to understand it
+- Editing files to fix bugs or add features
+- Creating new components
+- Processing data files
+
+**2. Command execution**
+
+Agents can run terminal commands:
+- Install dependencies (`npm install`, `pip install`)
+- Run tests (`pytest`, `npm test`)
+- Build projects (`make`, `cargo build`)
+- Execute scripts
+- Query databases
+- Deploy applications
+
+**3. Integration with development workflows**
+
+Developers already work in terminals. CLI agents fit naturally into existing practices:
+- Use your preferred editor with agent assistance
+- Run agents from your project directory
+- Integrate with shell scripts and automation
+- Access the same environment and credentials
+
+**4. Powerful tool ecosystem**
+
+The command line provides access to:
+- Compilers and interpreters
+- Testing frameworks
+- Linters and formatters
+- Version control (git)
+- Database clients
+- Cloud CLIs (AWS, Azure, GCP)
+- Package managers
+
+All of these become potential tools for the agent.
+
+**5. Immediate feedback loops**
+
+The agent can:
+- Write code
+- Run it
+- See the results (output, errors, test results)
+- Adjust and iterate
+
+This tight feedback loop enables rapid problem-solving.
+
+## Why Coding Dominates Current Agent Use
+
+There's a reason so much agent development has focused on code. It's not because agents are only good at coding—it's because coding is an ideal domain for agents.
+
+### Code Is Text
+
+LLMs are fundamentally text prediction models. Code is text. This alignment means:
+
+- Agents can read and write code naturally
+- No need for specialized output formats (unlike images or structured data)
+- The agent's native medium matches the task medium
+
+### Rich Feedback
+
+Code provides immediate, unambiguous feedback:
+
+```python
+def add(a, b):
+    return a - b  # Bug: should be a + b
+```
+
+Run it:
+```
+>>> add(2, 3)
+5  # Expected: 5, Got: 5... wait, this is wrong
+>>> add(2, 3)
+-1  # Bug revealed
+```
+
+The agent can:
+- Write code
+- Execute it
+- See it fail
+- Understand the error
+- Fix it
+- Verify the fix
+
+This feedback loop is clearer than in many other domains.
+
+### Existing Tool Ecosystem
+
+Software development has decades of tooling:
+- Test frameworks that output pass/fail
+- Linters that identify issues
+- Compilers that report errors
+- Debuggers that trace execution
+- Profilers that measure performance
+
+All of these tools were designed to provide information to developers. They work equally well for AI agents.
+
+### Deterministic Verification
+
+You can verify code works:
+- Run tests (pass or fail)
+- Check output (matches expected or doesn't)
+- Execute and observe (works or errors)
+
+This makes it easier to know when an agent has succeeded, unlike subjective tasks like "write a good essay."
+
+### Massive Training Data
+
+LLMs were trained on huge amounts of code:
+- Open source repositories (GitHub, etc.)
+- Stack Overflow discussions
+- Documentation
+- Books and tutorials
+
+This means agents have strong priors for coding tasks.
+
+### Composable Operations
+
+Code tasks break down into clear sub-tasks:
+- Read this file
+- Find the bug
+- Write a fix
+- Run tests
+- Commit changes
+
+Each sub-task is well-defined and verifiable, making them ideal for the agentic loop.
+
+## The Key Insight: These Are General-Purpose Agents
+
+Here's what most people miss: **Claude Code, Cursor, and similar tools are not coding-specific agents. They're general-purpose agents that happen to have great coding tools.**
+
+Think about what these agents actually have access to:
+
+- **File system**: Read and write any files
+- **Command execution**: Run any terminal command
+- **Web access**: Fetch information from the internet
+- **Code execution**: Run Python, JavaScript, shell scripts, etc.
+
+With these capabilities, the agent can:
+
+- Process data files (CSV, JSON, XML)
+- Generate reports (Markdown, PDF, HTML)
+- Interact with APIs (curl, API clients)
+- Automate system administration
+- Manage databases (SQL queries)
+- Send emails (using command-line mail clients)
+- Process images (using ImageMagick or similar)
+- Anything you can do in a terminal
+
+### Beyond Code: Real Use Cases
+
+**Data analysis:**
+```
+You: "Analyze sales_data.csv and create a summary report with key trends"
+Agent:
+  1. Reads CSV file
+  2. Writes Python script to analyze data
+  3. Executes script
+  4. Generates Markdown report with findings
+  5. Creates visualizations
+```
+
+**System administration:**
+```
+You: "Check disk usage across all servers in servers.txt and alert if any are >80% full"
+Agent:
+  1. Reads servers list
+  2. Writes script to SSH and check disk usage
+  3. Executes checks
+  4. Summarizes results
+  5. Highlights problems
+```
+
+**Content processing:**
+```
+You: "Convert all Word docs in /documents to PDF and organize by year"
+Agent:
+  1. Lists .docx files
+  2. Runs conversion command for each
+  3. Extracts dates from metadata
+  4. Organizes into year-based directories
+```
+
+None of these are "coding" in the traditional sense. They're automation tasks that happen to use code as a tool.
+
+## What Harnesses Are and Are Not
+
+Let's clarify the role of the harness:
+
+### What Agent Harnesses Are
+
+**Infrastructure that turns an LLM into a practical agent**
+
+The harness is the scaffolding:
+- Orchestrates the agentic loop
+- Provides and executes tools
+- Manages context and state
+- Handles security and sandboxing
+- Provides user interface
+
+Without the harness, you just have an LLM API.
+
+**Multipliers of the model's capabilities**
+
+The harness doesn't make the model smarter, but it makes the model's intelligence applicable to real-world tasks by giving it hands (tools) and memory (context management).
+
+**Configurable platforms**
+
+Modern harnesses let you:
+- Add custom tools
+- Set system prompts
+- Configure behavior
+- Define permissions and limits
+
+You can adapt them to your specific needs.
+
+### What Agent Harnesses Are Not
+
+**The intelligence itself**
+
+The harness doesn't make decisions or reason. That's the LLM's job. The harness is infrastructure, not intelligence.
+
+A better harness can make an agent more capable (by providing better tools) or safer (through better sandboxing), but it can't make the underlying model smarter.
+
+**Coding-specific (despite appearances)**
+
+CLI-based harnesses are designed with developers in mind, but their capabilities are general-purpose. File access and command execution enable far more than just coding.
+
+**One-size-fits-all solutions**
+
+Different harnesses make different trade-offs:
+- ChatGPT: Easy to use, limited control, no local access
+- Claude Code: Powerful local access, requires CLI comfort
+- Cursor: IDE integration, development focus
+- Custom harnesses: Maximum flexibility, requires building
+
+Choose based on your needs.
+
+## Looking Ahead
+
+Agent harnesses are evolving rapidly. Current trends:
+
+**More customization**: Easier ways to add custom tools and configure behavior
+
+**Better context management**: Smarter strategies for handling long conversations and large codebases
+
+**Improved safety**: More sophisticated sandboxing and permission systems
+
+**Domain-specific harnesses**: Specialized harnesses for healthcare, legal, finance, etc.
+
+**Cross-platform agents**: Agents that work across desktop, mobile, and web
+
+But the fundamental insight remains: **Agents need harnesses to be practical, and the best harnesses provide powerful tools while maintaining safety and usability.**
+
+In the next chapter, we'll explore a crucial realization: The general-purpose agent is already here, hiding in plain sight. Claude Code and its peers aren't just for code—they're platforms for agent-powered automation of almost any task you can accomplish through files and commands.
+
+And with custom tools, they become even more powerful.

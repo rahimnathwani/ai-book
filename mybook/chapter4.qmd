@@ -1,0 +1,411 @@
+# Enter the Agent {#sec-enter-agent}
+
+*The fundamental shift in how AI systems operate*
+
+We've arrived at the pivot point. Everything in the previous chapters—classification models, generative AI, workflows—has been building to this moment. We're about to explore the concept that transforms AI from a tool your software uses into something fundamentally different: an **agent**.
+
+The shift is conceptually simple but profound in its implications: **What if the AI model makes the decisions about what to do next?**
+
+This chapter introduces the defining characteristic of agents, explores how they operate, and clarifies the critical distinction between using AI in workflows and deploying AI as agents.
+
+## The Defining Characteristic of Agents
+
+Let's start with the clearest possible definition:
+
+**An AI agent is a system where the AI model decides which tools to call and what actions to take in pursuit of a goal.**
+
+That's it. That's the fundamental distinction.
+
+In a workflow: The software decides when to call the AI and what to do with the results.
+
+In an agent: The AI decides what to do next, including whether and when to use the tools available to it.
+
+### A Comparison
+
+**Workflow:**
+```
+Software: "Classify this customer email"
+AI: "This is a billing issue, high priority"
+Software: "Thank you. I'll route it to the billing queue and
+          generate a suggested response"
+AI: [not involved in these decisions]
+Software: "Here's what I generated. Now I'll store it in the
+          database and notify the on-call rep"
+```
+
+**Agent:**
+```
+You: "Handle this customer email appropriately"
+Agent: [reads email] "This is a billing issue. Let me check
+       the customer's account history first"
+Agent: [calls account lookup tool]
+Agent: [reviews results] "I see they've had billing problems
+       before. Let me check our knowledge base for the
+       standard resolution process"
+Agent: [searches knowledge base]
+Agent: [reviews findings] "I have enough information. I'll
+       draft a response, route this to the priority queue,
+       and attach the relevant account history"
+Agent: [calls email drafting tool, queue routing tool,
+       attachment tool]
+Agent: "Task complete. Email routed to priority billing queue
+       with drafted response and full context"
+```
+
+Notice the difference:
+
+- **Workflow**: Software pre-programmed every step
+- **Agent**: AI reasoned through the situation and decided its own approach
+
+The agent still used tools (account lookup, knowledge base search, email drafting). But the agent chose which tools to use, in what order, based on what it discovered along the way.
+
+### What This Enables
+
+When the AI model controls the decision-making:
+
+1. **Adaptability**: The agent can handle situations the designer didn't explicitly anticipate
+2. **Multi-step reasoning**: The agent can chain together multiple actions toward a goal
+3. **Context-aware decisions**: The agent can adjust its approach based on what it finds
+4. **Tool composition**: The agent can combine tools in novel ways
+5. **Goal-oriented behavior**: You specify what you want achieved, not how to achieve it
+
+### What This Requires
+
+This shift also demands new approaches:
+
+1. **Trust**: You must trust the agent to make reasonable decisions
+2. **Monitoring**: You need to observe what the agent is doing, not just what it produces
+3. **Constraints**: You must define boundaries around what the agent can do
+4. **Error handling**: The agent might take unexpected paths, including wrong ones
+5. **Tool design**: Tools must be self-descriptive so the agent knows when to use them
+
+## The Agentic Loop
+
+Agents operate through a fundamental pattern called the **agentic loop** (also called the ReAct loop, for Reasoning + Acting). Understanding this loop is essential for working with agents effectively.
+
+### The Loop Structure
+
+```
+1. Observe the current state
+2. Reason about what to do next
+3. Decide on an action
+4. Execute the action (call a tool)
+5. Observe the result
+6. Repeat until the task is complete (or limits are reached)
+```
+
+This is fundamentally different from executing a predetermined sequence of steps. The agent is continuously assessing the situation and deciding its next move.
+
+### A Detailed Example
+
+Let's walk through an agent completing a task: "Find the total amount spent by customer ID 12345 last month and send them a thank you email if it's over $1000."
+
+**Iteration 1:**
+- **Observe**: I have a task about customer 12345, needing to check spending and conditionally send email
+- **Reason**: I need spending data first. I should query the database
+- **Decide**: Use the `query_database` tool
+- **Execute**: `query_database(customer_id=12345, date_range="last_month")`
+- **Result**: $1,247.89
+
+**Iteration 2:**
+- **Observe**: Customer 12345 spent $1,247.89 last month (over $1000 threshold)
+- **Reason**: This qualifies for a thank you email. I should personalize it with the actual amount
+- **Decide**: Use the `send_email` tool
+- **Execute**: `send_email(to=customer_12345_email, subject="Thank you!", body="Thank you for your $1,247.89 in business last month...")`
+- **Result**: Email sent successfully
+
+**Iteration 3:**
+- **Observe**: I've determined the spend amount and sent the qualifying thank you email
+- **Reason**: The task is complete
+- **Decide**: Stop
+- **Execute**: Return final summary
+
+### What Makes This "Agentic"
+
+The agent made several autonomous decisions:
+
+1. **Sequencing**: It decided to query the database before sending the email (obvious here, but the agent reasoned through it rather than following a script)
+2. **Conditional logic**: It evaluated whether $1,247.89 > $1,000 and decided to send the email
+3. **Tool selection**: It chose which tools to use from those available
+4. **Content generation**: It composed an email with the specific amount
+5. **Completion detection**: It recognized when the task was done
+
+In a workflow, every one of these decisions would be explicitly coded. In an agent, the AI model made them based on reasoning.
+
+### The Loop in Practice
+
+Real agent implementations handle additional complexities:
+
+**Context management**: Each observation and action is added to the context window, so the agent "remembers" what it's done.
+
+**Error handling**: If a tool call fails, the agent observes the error and can reason about what to try next.
+
+**Iteration limits**: To prevent infinite loops, agents typically have a maximum number of iterations.
+
+**Cost limits**: Since each iteration involves LLM calls, agents may have budget limits.
+
+**Verification steps**: The agent might use a tool to verify results before proceeding.
+
+### What the Loop Is and Isn't
+
+**What the agentic loop is:**
+- An iterative cycle of reasoning and acting
+- The mechanism that gives agents their adaptability
+- A framework for multi-step problem-solving
+- Fundamentally non-deterministic (same task might be approached differently)
+
+**What the agentic loop is not:**
+- A predetermined sequence of steps
+- Guaranteed to take the optimal path
+- Limited to a single iteration (most real tasks need multiple)
+- Foolproof (the agent can reason incorrectly)
+
+## Tools: The Agent's Hands
+
+An agent without tools is just a chatbot—it can reason and generate text, but it can't affect the world or access external information. **Tools** are what transform an LLM into an agent capable of doing work.
+
+### What Is a Tool?
+
+A tool is a function that the agent can call. From the agent's perspective, a tool is defined by:
+
+1. **Name**: A clear, descriptive identifier
+2. **Description**: What the tool does and when to use it
+3. **Parameters**: What inputs it requires (with descriptions)
+4. **Return value**: What information it provides back
+
+**Example tool definition:**
+```json
+{
+  "name": "query_customer_database",
+  "description": "Queries the customer database for information about a specific customer. Use this when you need customer details, order history, or account status.",
+  "parameters": {
+    "customer_id": {
+      "type": "string",
+      "description": "The unique customer identifier"
+    },
+    "include_orders": {
+      "type": "boolean",
+      "description": "Whether to include order history (optional, defaults to false)"
+    }
+  },
+  "returns": "Customer object with requested information"
+}
+```
+
+The agent reads these descriptions and decides when to use the tool based on its task.
+
+### Common Tool Types
+
+**Information retrieval:**
+- Database queries
+- Web searches
+- File reading
+- API calls to external services
+- Knowledge base searches
+
+**Actions and modifications:**
+- Sending emails or messages
+- Creating or updating database records
+- File writing
+- Making API calls that change state
+- Running shell commands
+
+**Computation and analysis:**
+- Code execution (running Python, SQL, etc.)
+- Data transformation
+- Mathematical calculations
+- Report generation
+
+**Specialized domain tools:**
+- Medical diagnosis lookups
+- Legal research databases
+- Financial data APIs
+- Inventory management systems
+
+### How Agents Choose Tools
+
+This is where the magic happens. The agent:
+
+1. **Reads the available tool descriptions** (these are in its context)
+2. **Considers the current task** and what's been done so far
+3. **Reasons about which tool would help** make progress
+4. **Decides on a specific tool and parameters**
+5. **Calls the tool**
+6. **Interprets the result** and continues reasoning
+
+**Example decision-making process:**
+
+Task: "Analyze sales trends for Q4"
+
+Agent's reasoning:
+- "I need sales data. Looking at available tools..."
+- "I see `query_database`, `read_file`, and `web_search`"
+- "The task is about our sales data, so `web_search` isn't appropriate"
+- "`query_database` is described as accessing sales records—that's what I need"
+- "I'll query for Q4 sales data"
+
+The agent doesn't have hardcoded logic saying "sales analysis → database query." It reads the tool descriptions and reasons about which tool matches the need.
+
+### Tool Design Principles
+
+Since agents choose tools based on descriptions, good tool design is crucial:
+
+**Clear, distinctive names**: `send_email` is better than `tool_5`
+
+**Precise descriptions**: Explain exactly what the tool does and when to use it
+- Good: "Sends an email to a specified recipient with subject and body. Use this when you need to communicate with users or stakeholders via email."
+- Bad: "Handles email stuff"
+
+**Well-documented parameters**: Every parameter needs a clear description
+- Good: `customer_id (string): The unique identifier for the customer, found in the customer database`
+- Bad: `id (string): The ID`
+
+**Appropriate scope**: Each tool should do one thing well
+- Good: Separate tools for `send_email` and `schedule_email`
+- Bad: One mega-tool that does email, SMS, notifications, and calendar events
+
+**Useful return values**: Return information the agent might need for reasoning
+- Good: `{"email_sent": true, "message_id": "abc123", "recipient_confirmed": "user@example.com"}`
+- Bad: `{"status": "ok"}`
+
+### Tool Limitations and Safety
+
+Tools are powerful, which means they require careful consideration:
+
+**The agent can only use tools you provide**: An agent without a `send_email` tool cannot send emails, no matter how much reasoning it does.
+
+**The agent might use tools incorrectly**: It might misunderstand a description, pass wrong parameters, or use a tool at the wrong time.
+
+**The agent might not use a tool when it should**: If the description doesn't clearly match the agent's interpretation of the task, it might overlook a useful tool.
+
+**Tools have real effects**: If you give an agent a `delete_database_table` tool, it might use it. Tool design is security design.
+
+We'll explore tool design in much more depth in Chapter 7, and security considerations in Chapter 13.
+
+### What Tools Are and Aren't
+
+**What tools are:**
+- Capabilities you grant to the agent
+- Functions the agent can call to interact with the world
+- Described in natural language for the agent to understand
+- The mechanism that makes agents useful for real work
+
+**What tools are not:**
+- Guaranteed to be used (the agent chooses)
+- Foolproof (the agent might use them wrongly)
+- A complete specification of the agent's behavior (the agent still reasons)
+- Traditional API calls from the software (the AI decides when to call them)
+
+## Workflows vs. Agents: When to Use Which
+
+We now have enough context to address the critical question: When should you use a workflow versus an agent?
+
+### Use Workflows When:
+
+**You know exactly what needs to happen**
+- Processing invoices that follow standard formats
+- Routing support tickets based on clear categories
+- Sending scheduled reports with predictable content
+
+**Consistency is critical**
+- Regulatory compliance requirements demand identical processing
+- Brand guidelines must be followed precisely
+- Every instance must be handled the same way
+
+**Volume is high and cost matters**
+- Processing millions of transactions where agent reasoning overhead would be expensive
+- Margins are thin and you need efficient execution
+
+**The problem domain is stable**
+- The scenarios don't change frequently
+- New edge cases are rare
+- The workflow can be updated occasionally when needed
+
+**Auditability requires explicit logic**
+- You need to point to specific code that explains decisions
+- Compliance demands transparent, predetermined rules
+
+### Use Agents When:
+
+**The path to the goal isn't predetermined**
+- Researching a complex question that might require different sources depending on what you find
+- Debugging a problem where the next step depends on what each test reveals
+- Handling customer issues that might involve multiple interconnected problems
+
+**Adaptability to variation is important**
+- Inputs come in many different formats
+- Each instance might require a different approach
+- New scenarios emerge frequently
+
+**Multi-step reasoning is required**
+- The task requires chaining together multiple sub-tasks
+- Each step informs what should happen next
+- The sequence can't be predicted in advance
+
+**Human-like judgment adds value**
+- The task benefits from contextual understanding
+- There are nuances that are hard to code explicitly
+- The "right" answer depends on factors that are difficult to enumerate
+
+**You're willing to trade control for capability**
+- You can accept some unpredictability
+- You can implement appropriate safeguards
+- The benefits of flexibility outweigh the risks of non-determinism
+
+### The Hybrid Approach: Agents That Invoke Workflows
+
+Here's a sophisticated pattern: agents that have workflows as tools.
+
+**Example: Customer support agent**
+
+The agent has these tools:
+- `check_account_status` (workflow: query database, apply business rules, return structured status)
+- `process_refund` (workflow: validate request, check policy, execute refund, send confirmation)
+- `search_knowledge_base` (workflow: embed query, semantic search, rank results, return top matches)
+- `escalate_to_human` (workflow: create ticket, route to appropriate team, notify)
+
+The **agent** reasons about the customer's issue and decides which tools to use, in what order.
+
+Each **tool** is a reliable workflow that does one thing well and predictably.
+
+This combines the best of both:
+- Agent flexibility and reasoning for the overall task
+- Workflow reliability and auditability for critical operations
+
+### The Spectrum
+
+Think of it as a spectrum rather than a binary choice:
+
+```
+Pure Workflow ← → Pure Agent
+
+Traditional software with     Agents that invoke      Agents with direct
+AI components at specific     workflows for critical  tool access to all
+predetermined points          operations              systems
+```
+
+Most production systems will land somewhere in the middle, using agents for reasoning and decision-making while delegating well-defined operations to workflows.
+
+## What We've Learned
+
+The shift from workflows to agents represents a fundamental change in how we build AI systems:
+
+**Workflows:**
+- Software makes decisions
+- AI provides capabilities
+- Predetermined logic
+- Predictable behavior
+- Explicit control
+
+**Agents:**
+- AI makes decisions
+- Tools provide capabilities
+- Emergent behavior through reasoning
+- Adaptive approach
+- Guided autonomy
+
+The agentic loop—observe, reason, act, repeat—is what gives agents their power. Tools are what let them do real work. And the design choice between workflows and agents depends on your specific needs around predictability, adaptability, and control.
+
+But agents don't exist in isolation. They need infrastructure to run, interfaces for humans to interact with them, and systems to manage their execution. That infrastructure is called an **agent harness**, and it's what makes agents practical for real-world use.
+
+In the next chapter, we'll explore what agent harnesses do, how they've evolved, and why the current state of the art is dominated by CLI-based systems designed for coding tasks—which turn out to be much more general-purpose than they first appear.

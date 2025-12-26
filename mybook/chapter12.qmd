@@ -1,0 +1,646 @@
+# Human-in-the-Loop Patterns {#sec-human-in-loop}
+
+*Keeping humans appropriately involved*
+
+Agents can accomplish tasks autonomously. But should they always? And if humans should be involved, how and when?
+
+These questions don't have universal answers. The right level of human involvement depends on the stakes, the reliability requirements, the volume of work, and the specific task characteristics.
+
+This chapter explores the spectrum of human involvement in agent systems, provides frameworks for choosing the right level of autonomy, and demonstrates practical patterns for implementing effective human-in-the-loop workflows.
+
+## The Autonomy Spectrum
+
+Human involvement in AI systems exists on a continuum, not as a binary choice.
+
+### AI-Assisted: Human Does Work, AI Provides Suggestions
+
+**Pattern:** Human performs the task, AI offers recommendations or augmentation.
+
+**Example: Code completion**
+```
+Developer types: function calculateTotalPrice(
+AI suggests: items, taxRate) {
+Developer accepts or modifies
+```
+
+**Example: Writing assistance**
+```
+Writer drafts email
+AI suggests: "Consider softening the tone in paragraph 2"
+Writer decides whether to revise
+```
+
+**Characteristics:**
+- Human maintains full control
+- AI enhances productivity
+- Human makes all decisions
+- Very low risk (AI just advises)
+
+**When to use:**
+- Creative work where human judgment is essential
+- Tasks requiring nuanced decision-making
+- Learning scenarios (human wants to develop skill)
+- High-stakes work where AI isn't trusted yet
+
+### AI-Drafted: AI Does First Pass, Human Reviews and Edits
+
+**Pattern:** AI generates complete output, human reviews, edits, and approves.
+
+**Example: Report generation**
+```
+1. AI analyzes data and writes report
+2. Human reviews report
+3. Human edits for accuracy, tone, emphasis
+4. Human approves final version
+```
+
+**Example: Customer support responses**
+```
+1. Customer submits question
+2. AI drafts response
+3. Support agent reviews
+4. Agent edits or approves
+5. Response sent to customer
+```
+
+**Characteristics:**
+- AI does the heavy lifting
+- Human ensures quality
+- Significant time savings vs. writing from scratch
+- Human has final say
+
+**When to use:**
+- Time-consuming tasks where AI drafts save effort
+- Quality-sensitive outputs that need review
+- Tasks where AI is good but not perfect
+- Building trust in AI capabilities
+
+### AI-Executed with Approval: AI Completes Task, Human Approves Before Effect
+
+**Pattern:** AI performs all work and prepares action, but waits for human approval before executing.
+
+**Example: Email campaign**
+```
+1. AI generates 500 personalized emails
+2. AI presents sample (first 10) to human
+3. Human reviews samples
+4. If approved: AI sends all emails
+5. If rejected: AI revises based on feedback
+```
+
+**Example: Database cleanup**
+```
+1. AI identifies 1,247 records to delete
+2. AI presents deletion plan with reasoning
+3. Human reviews plan
+4. Human approves or rejects
+5. If approved: AI executes deletion
+```
+
+**Characteristics:**
+- AI does all analysis and preparation
+- Human acts as final checkpoint
+- More efficient than human doing entire task
+- Lower risk than full autonomy
+
+**When to use:**
+- Batch operations at scale
+- Moderate-risk actions
+- Tasks where AI is reliable but stakes are meaningful
+- When reversibility is difficult or impossible
+
+### Fully Autonomous: AI Acts Without Human Intervention
+
+**Pattern:** AI performs task end-to-end with no human approval.
+
+**Example: Spam filtering**
+```
+1. Email arrives
+2. AI classifies as spam
+3. Email moved to spam folder
+4. (No human involved)
+```
+
+**Example: Anomaly detection and alerting**
+```
+1. AI monitors system metrics
+2. AI detects anomaly
+3. AI sends alert to on-call engineer
+4. (Human only involved after alert)
+```
+
+**Characteristics:**
+- Maximum efficiency
+- No human bottleneck
+- Requires high confidence in AI
+- Mistakes happen without human oversight
+
+**When to use:**
+- High-volume, low-stakes tasks
+- Well-defined, repetitive operations
+- AI has proven reliability for the task
+- Cost of human review exceeds cost of occasional mistakes
+- Real-time responses required
+
+## Choosing the Right Level of Autonomy
+
+How do you decide where on the spectrum each task should fall?
+
+### Framework: Four Key Questions
+
+**1. What's the cost of an error?**
+
+High cost → More human involvement
+- Financial loss
+- Legal liability
+- Safety risk
+- Reputation damage
+- Customer trust
+
+Low cost → Less human involvement
+- Easy to fix
+- Minimal impact
+- Internal only
+
+**Example:**
+- High cost: Deleting customer data → AI-executed with approval (or AI-assisted)
+- Low cost: Categorizing internal docs → Fully autonomous
+
+**2. Is the action reversible?**
+
+Irreversible → More human involvement
+- Data deletion
+- Public communications
+- Financial transactions
+- System configuration changes
+
+Reversible → Less human involvement
+- Draft documents
+- Temporary states
+- Soft deletes
+- Staged deployments
+
+**Example:**
+- Irreversible: Sending press release → AI-drafted, human approves
+- Reversible: Generating internal report → Fully autonomous
+
+**3. How reliable is the system for this task?**
+
+Low reliability → More human involvement
+- New task type for the agent
+- Complex edge cases
+- Proven error-prone
+- Limited testing
+
+High reliability → Less human involvement
+- Mature system
+- Well-tested
+- Proven track record
+- Simple, well-defined task
+
+**Example:**
+- Low reliability: Novel analysis type → AI-drafted, human reviews
+- High reliability: Routine categorization (95%+ accuracy) → Fully autonomous
+
+**4. Is human review practical at this scale?**
+
+Low volume → Human review feasible
+- 10 items/day → Easy to review
+- 100 items/day → Review takes effort but possible
+
+High volume → Human review impractical
+- 10,000 items/day → Can't review everything
+- 100,000 items/day → Must trust automation
+
+**Example:**
+- Low volume: Executive briefings (5/week) → AI-drafted, human reviews all
+- High volume: Customer support tickets (5,000/day) → Spot-check samples, autonomy for routine cases
+
+### Decision Matrix
+
+```
+High Stakes + Irreversible + Unproven = AI-assisted (human in control)
+High Stakes + Reversible + Proven = AI-drafted (human reviews)
+Medium Stakes + Any + Proven = AI-executed with approval
+Low Stakes + Reversible + Proven = Fully autonomous
+```
+
+### Adjusting Over Time
+
+Start conservative, increase autonomy as confidence grows:
+
+```
+Phase 1: AI-assisted (learning about the task)
+Phase 2: AI-drafted (AI attempts, human reviews all)
+Phase 3: AI-executed with approval (spot-check samples)
+Phase 4: Fully autonomous (monitor for issues)
+```
+
+## Implementing Approval Workflows
+
+Let's explore practical patterns for implementing human approval in agent systems.
+
+### Pattern 1: Confirmation Prompts Before Tool Execution
+
+**Implementation:**
+Agent requests confirmation before calling high-impact tools.
+
+```python
+class AgentWithConfirmation:
+    def execute_tool(self, tool_name, parameters):
+        # Check if tool requires confirmation
+        if tool_name in self.high_impact_tools:
+            # Present plan to user
+            print(f"I plan to execute: {tool_name}")
+            print(f"Parameters: {parameters}")
+            print(f"Impact: {self.get_tool_impact(tool_name)}")
+
+            response = input("Proceed? (yes/no): ")
+
+            if response.lower() != 'yes':
+                return {"status": "cancelled_by_user"}
+
+        # Execute if approved or not high-impact
+        return self.tools[tool_name](**parameters)
+```
+
+**Example interaction:**
+```
+Agent: "I plan to execute: delete_old_logs"
+Parameters: {"older_than_days": 90, "table": "customer_activity"}
+Impact: "Will permanently delete ~500,000 customer activity records older than 90 days"
+
+Proceed? (yes/no): _
+```
+
+**When to use:**
+- High-impact operations
+- Data deletion
+- External communications
+- Financial actions
+
+### Pattern 2: Review Queues for Batched Operations
+
+**Implementation:**
+Agent prepares all work, queues it for review, executes after approval.
+
+```python
+class ReviewQueue:
+    def __init__(self):
+        self.pending_actions = []
+
+    def queue_action(self, action_type, details, execute_fn):
+        self.pending_actions.append({
+            "id": generate_id(),
+            "type": action_type,
+            "details": details,
+            "execute": execute_fn,
+            "status": "pending"
+        })
+
+    def review_interface(self):
+        for action in self.pending_actions:
+            if action["status"] != "pending":
+                continue
+
+            print(f"\nAction {action['id']}: {action['type']}")
+            print(f"Details: {action['details']}")
+
+            decision = input("Approve/Reject/Skip? (a/r/s): ")
+
+            if decision == 'a':
+                action["execute"]()
+                action["status"] = "approved"
+            elif decision == 'r':
+                action["status"] = "rejected"
+```
+
+**Example: Email campaign workflow**
+```
+1. Agent generates 500 emails
+2. Agent adds each to review queue
+3. Human reviews samples (first 10, random 10, last 10)
+4. Human approves batch
+5. Agent sends all approved emails
+```
+
+**When to use:**
+- Batch operations
+- When reviewing samples is sufficient
+- Time isn't critical (async review OK)
+
+### Pattern 3: Escalation Paths for Uncertain Situations
+
+**Implementation:**
+Agent handles routine cases, escalates unusual ones.
+
+```python
+def handle_customer_request(request):
+    # Agent analyzes request
+    classification = agent.classify(request)
+
+    if classification["confidence"] > 0.9 and classification["category"] in agent.can_handle:
+        # High confidence, routine category → Handle autonomously
+        return agent.process(request)
+
+    elif classification["confidence"] > 0.7:
+        # Medium confidence → Draft response, queue for approval
+        draft = agent.draft_response(request)
+        return queue_for_human_review(draft, request)
+
+    else:
+        # Low confidence or unusual → Escalate immediately
+        return escalate_to_human(request, reason="Unusual case, low confidence")
+```
+
+**Example:**
+```
+Request 1: "What are your business hours?"
+  → Confidence: 0.95 → Handle autonomously
+
+Request 2: "I need a refund for my cancelled order"
+  → Confidence: 0.75 → Draft response, queue for approval
+
+Request 3: "I'm a lawyer representing a client regarding data breach"
+  → Confidence: 0.3 → Immediate escalation to legal team
+```
+
+**When to use:**
+- Customer-facing operations
+- Variable complexity tasks
+- When most cases are routine but some need expertise
+
+### Pattern 4: Audit Trails for All Agent Actions
+
+**Implementation:**
+Log everything the agent does for later review.
+
+```python
+class AuditedAgent:
+    def __init__(self):
+        self.audit_log = []
+
+    def execute_action(self, action, params):
+        # Log before execution
+        log_entry = {
+            "timestamp": now(),
+            "action": action,
+            "parameters": params,
+            "context": self.get_context()
+        }
+
+        # Execute
+        try:
+            result = self.perform(action, params)
+            log_entry["result"] = result
+            log_entry["status"] = "success"
+        except Exception as e:
+            log_entry["error"] = str(e)
+            log_entry["status"] = "failed"
+
+        # Log after execution
+        self.audit_log.append(log_entry)
+        self.persist_log(log_entry)
+
+        return result
+```
+
+**Benefits:**
+- Full traceability
+- Can review actions after the fact
+- Identify patterns in mistakes
+- Compliance and accountability
+
+**When to use:**
+- All production systems (always)
+- Especially for financial, medical, legal domains
+- Any regulated environment
+
+### Pattern 5: Confidence-Based Routing
+
+**Implementation:**
+Route based on agent's confidence in its own answer.
+
+```python
+def answer_with_routing(question):
+    answer, confidence = agent.answer(question)
+
+    if confidence > 0.95:
+        # Very confident → Return directly
+        return answer
+
+    elif confidence > 0.75:
+        # Moderately confident → Return with caveat
+        return f"{answer}\n\nNote: Moderate confidence. Please verify if critical."
+
+    else:
+        # Low confidence → Escalate
+        return "I'm not confident in my answer. Routing to human expert..."
+```
+
+**When to use:**
+- Q&A systems
+- Advisory applications
+- When agent can estimate its own reliability
+
+## Example: The Email Campaign with Review
+
+Let's walk through a complete example combining multiple patterns.
+
+**Scenario:** Marketing wants to send personalized re-engagement emails to 2,000 inactive customers.
+
+### Workflow Design
+
+**Step 1: Agent preparation (autonomous)**
+```python
+# Agent identifies inactive customers
+customers = agent.query_database("""
+    SELECT id, name, email, last_active, signup_date
+    FROM customers
+    WHERE last_active < '2024-10-01'
+    AND email_opt_in = true
+    LIMIT 2000
+""")
+
+# Agent generates personalized email for each
+emails = []
+for customer in customers:
+    context = f"""
+    Customer: {customer.name}
+    Inactive since: {customer.last_active}
+    Member since: {customer.signup_date}
+    """
+
+    email_body = agent.generate_email(context, template="re_engagement")
+
+    emails.append({
+        "to": customer.email,
+        "subject": agent.generate_subject(customer),
+        "body": email_body,
+        "customer_id": customer.id
+    })
+```
+
+**Step 2: Sample review (human)**
+```python
+# Show human a representative sample
+samples = {
+    "first_10": emails[:10],
+    "random_20": random.sample(emails, 20),
+    "newest_customers": sorted_by_signup_date[:10]
+}
+
+print("=== REVIEW SAMPLE EMAILS ===")
+for category, sample_emails in samples.items():
+    print(f"\n{category}:")
+    for email in sample_emails:
+        print(f"To: {email['to']}")
+        print(f"Subject: {email['subject']}")
+        print(email['body'])
+        print("---")
+
+decision = input("\nApprove batch for sending? (yes/no/revise): ")
+```
+
+**Step 3: Conditional execution**
+```python
+if decision == "yes":
+    # Queue all for sending
+    for email in emails:
+        email_service.queue(email)
+        audit_log(f"Queued email to {email['to']}")
+
+    print(f"✓ Queued {len(emails)} emails for sending")
+
+elif decision == "revise":
+    feedback = input("What needs to change? ")
+
+    # Agent revises based on feedback
+    revised_emails = agent.revise_batch(emails, feedback)
+
+    # Present new samples for review
+    # (Loop back to step 2)
+
+else:
+    print("Campaign cancelled")
+    audit_log("Campaign cancelled by human review")
+```
+
+**Step 4: Monitor execution (autonomous with oversight)**
+```python
+# Emails send over next hour
+# Agent monitors for bounces, unsubscribes, errors
+
+results = email_service.get_campaign_results(campaign_id)
+
+if results.bounce_rate > 0.05:
+    # Unusual bounce rate → Alert human
+    alert_human("High bounce rate detected in campaign")
+
+# Generate completion report
+agent.generate_report(results)
+```
+
+### Why This Design Works
+
+- **Efficiency:** Agent handles bulk work (2,000 personalized emails)
+- **Quality:** Human reviews representative samples
+- **Safety:** Approval required before sending
+- **Accountability:** Full audit trail
+- **Flexibility:** Human can revise or cancel
+- **Monitoring:** Automated oversight continues after approval
+
+## Balancing Efficiency and Control
+
+The tension in human-in-the-loop design:
+
+**More human involvement:**
+- ✅ Higher quality
+- ✅ Lower risk
+- ✅ Greater accountability
+- ❌ Slower
+- ❌ More expensive
+- ❌ Doesn't scale
+
+**Less human involvement:**
+- ✅ Faster
+- ✅ Cheaper
+- ✅ Scales easily
+- ❌ Higher risk
+- ❌ Less oversight
+- ❌ Mistakes happen
+
+**The art:** Finding the minimum human involvement that maintains acceptable quality and risk levels.
+
+### Strategies for Efficient Oversight
+
+**Sample-based review:**
+Review 10% of outputs instead of 100%
+
+**Threshold-based escalation:**
+Only review cases below confidence threshold
+
+**Spot audits:**
+Randomly audit autonomous actions after execution
+
+**Exception monitoring:**
+Let system run autonomously, alert on anomalies
+
+**Progressive trust:**
+Start with heavy oversight, reduce as system proves reliable
+
+## What Human-in-the-Loop Is and Is Not
+
+### What It Is
+
+**Thoughtful division of labor between humans and AI**
+
+Recognizing that:
+- AI excels at scale, consistency, tirelessness
+- Humans excel at judgment, creativity, accountability
+- Best results often come from collaboration
+
+**Risk-appropriate oversight**
+
+Matching level of human involvement to stakes and reliability.
+
+**Evolving relationship**
+
+Starting conservative, increasing autonomy as systems prove themselves.
+
+### What It Is Not
+
+**A sign of AI failure**
+
+Human involvement doesn't mean the AI isn't working. It means you're being responsible.
+
+**Always necessary**
+
+Some tasks genuinely can be fully automated. Don't add human steps unnecessarily.
+
+**Static**
+
+The right level of involvement changes as:
+- Systems improve
+- Trust builds
+- Task characteristics change
+- Organizational needs evolve
+
+## Practical Principles
+
+1. **Start conservative, increase autonomy gradually**
+2. **Match oversight to stakes**
+3. **Design for efficiency** (sample reviews, not exhaustive)
+4. **Make approval easy** (good UX for review workflows)
+5. **Audit everything** (even fully autonomous actions)
+6. **Provide clear escalation paths**
+7. **Monitor and adjust** (track error rates, revise policies)
+8. **Respect human time** (don't require approval for trivial decisions)
+
+## Looking Ahead
+
+Human-in-the-loop patterns determine when and how people oversee agent actions. But there's another critical consideration: What can agents actually access? What can they modify? What damage could they potentially cause?
+
+The next chapter addresses security, sandboxing, and the principle of least privilege—protecting your systems from your agents.
+
+Because as powerful as agents are, they're also potentially dangerous if not properly constrained.

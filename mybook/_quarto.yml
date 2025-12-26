@@ -2,11 +2,39 @@ project:
   type: book
 
 book:
-  title: "mybook"
+  title: "AI Agents for the IT Professional"
   author: "Norah Jones"
   date: "12/26/2025"
   chapters:
     - index.qmd
+    - part: "Part I: Foundations — Understanding the AI Landscape"
+      chapters:
+        - chapter1.qmd
+        - chapter2.qmd
+    - part: "Part II: From Workflows to Agents — A Critical Distinction"
+      chapters:
+        - chapter3.qmd
+        - chapter4.qmd
+        - chapter5.qmd
+    - part: "Part III: Building with Agents — Practical Considerations"
+      chapters:
+        - chapter6.qmd
+        - chapter7.qmd
+        - chapter8.qmd
+        - chapter9.qmd
+        - chapter10.qmd
+        - chapter11.qmd
+        - chapter12.qmd
+        - chapter13.qmd
+        - chapter14.qmd
+        - chapter15.qmd
+        - chapter16.qmd
+    - part: "Part IV: Putting It All Together"
+      chapters:
+        - chapter17.qmd
+        - chapter18.qmd
+        - chapter19.qmd
+        - chapter20.qmd
     - intro.qmd
     - summary.qmd
     - references.qmd

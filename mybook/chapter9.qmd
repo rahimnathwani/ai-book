@@ -1,0 +1,510 @@
+# When Agents Should Write Code Instead {#sec-write-code}
+
+*Knowing the limits of in-context reasoning*
+
+Here's a question that might seem counterintuitive: When should a coding agent *not* use its reasoning capabilities directly?
+
+The answer reveals a crucial principle for building effective agent systems: **Some tasks are better solved by writing code than by reasoning in context.**
+
+This chapter explores when and why agents should generate and execute code rather than trying to accomplish tasks purely through reasoning and tool calls. Understanding this distinction is key to building agents that are both powerful and reliable.
+
+## The Cognitive Load Principle
+
+Let's start with an analogy.
+
+Imagine asking a human colleague: "Add up these 10,000 numbers and tell me the sum."
+
+Your colleague could, theoretically, do this. They could add the numbers sequentially, keeping track in their head (or on paper). But this would be:
+
+- **Slow**: Takes a long time
+- **Error-prone**: Easy to make mistakes with large-scale mental arithmetic
+- **Tedious**: Wastes their cognitive capacity
+- **Inefficient**: There are better ways
+
+The sensible approach: "Write a simple program or spreadsheet formula to sum them."
+
+The same principle applies to AI agents. Just because an agent *can* reason through a task doesn't mean it *should*.
+
+### What's the Cost?
+
+When agents reason through tasks directly:
+
+**Context window consumption:**
+- Each intermediate step uses tokens
+- Large datasets can't fit in context
+- Limits what else the agent can consider
+
+**Time and latency:**
+- Each reasoning step requires LLM calls
+- Multi-step tasks compound latency
+- User waits longer for results
+
+**Reliability:**
+- LLMs can make computational errors
+- The more steps, the more opportunities for mistakes
+- Probabilistic generation isn't ideal for deterministic tasks
+
+**Cost:**
+- LLM calls cost money
+- Complex reasoning uses many tokens
+- At scale, this adds up significantly
+
+### The Alternative: Generate and Execute Code
+
+When agents write code to solve tasks:
+
+**Advantages:**
+- **Precise**: Code executes deterministically
+- **Fast**: Computation happens at code speed, not reasoning speed
+- **Scalable**: Can process arbitrarily large datasets
+- **Cheap**: One LLM call to write code + fast execution vs. many LLM calls to reason
+- **Reliable**: Computational tasks get computational solutions
+
+**The pattern:**
+1. Agent reasons about the approach
+2. Agent writes code to execute the approach
+3. Agent runs the code
+4. Agent interprets the results
+5. Agent decides next steps
+
+The agent uses reasoning where it adds value (deciding what to do, interpreting results) and uses code where it adds value (precise computation).
+
+## Tasks Where Agents Should Write Code
+
+Let's explore specific categories where code is the right choice.
+
+### Data Transformations
+
+**Task: Join two CSV files on a common column**
+
+**Bad approach (reasoning):**
+```
+Agent: Let me read both files and match rows...
+[Agent reads file1.csv - uses 5000 tokens]
+[Agent reads file2.csv - uses 3000 tokens]
+Agent: Now matching rows where customer_id is the same...
+[Agent tries to process in context, runs into limits]
+```
+
+**Good approach (code):**
+```
+Agent: I need to join these CSVs. I'll write a Python script.
+[Writes script:]
+
+import pandas as pd
+
+df1 = pd.read_csv('file1.csv')
+df2 = pd.read_csv('file2.csv')
+merged = pd1.merge(df2, on='customer_id', how='inner')
+merged.to_csv('output.csv', index=False)
+print(f"Joined {len(merged)} rows")
+
+[Executes script]
+Output: "Joined 8,472 rows"
+Agent: Successfully joined the files. Output is in output.csv.
+```
+
+**Why code wins:**
+- Handles arbitrary file sizes
+- Precise matching logic
+- Fast execution
+- Clear, verifiable result
+
+### Numerical Computations
+
+**Task: Calculate compound annual growth rate for 50 products**
+
+**Bad approach:**
+```
+Agent: For product 1, revenue year 1 was $10,000, year 5 was $18,500...
+CAGR = (18500/10000)^(1/4) - 1 = ...
+[Potential arithmetic errors]
+[Repeats for 50 products]
+```
+
+**Good approach:**
+```python
+import pandas as pd
+import numpy as np
+
+data = pd.read_csv('product_revenue.csv')
+
+def calculate_cagr(starting, ending, years):
+    return (ending / starting) ** (1 / years) - 1
+
+data['cagr'] = data.apply(
+    lambda row: calculate_cagr(
+        row['year1_revenue'],
+        row['year5_revenue'],
+        4
+    ),
+    axis=1
+)
+
+print(data[['product', 'cagr']].sort_values('cagr', ascending=False))
+```
+
+Precise, fast, scalable.
+
+### Repetitive Operations Over Large Datasets
+
+**Task: Validate and clean 10,000 email addresses**
+
+**Bad approach:**
+```
+Agent: Checking email 1: john@example.com - valid
+Checking email 2: jane.doe@company.org - valid
+Checking email 3: invalid-email - invalid, removing
+...
+[Continues for 10,000 items]
+```
+
+**Good approach:**
+```python
+import re
+
+def is_valid_email(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+with open('emails.txt', 'r') as f:
+    emails = [line.strip() for line in f]
+
+valid_emails = [e for e in emails if is_valid_email(e)]
+invalid_count = len(emails) - len(valid_emails)
+
+with open('valid_emails.txt', 'w') as f:
+    f.write('\n'.join(valid_emails))
+
+print(f"Validated {len(emails)} emails")
+print(f"Valid: {len(valid_emails)}, Invalid: {invalid_count}")
+```
+
+Executes in milliseconds instead of minutes.
+
+### Complex Aggregations and Analytics
+
+**Task: Analyze sales patterns across regions, time periods, and product categories**
+
+**Bad approach:**
+Trying to hold and manipulate large datasets in context, make calculations through reasoning.
+
+**Good approach:**
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+sales = pd.read_csv('sales_data.csv')
+sales['date'] = pd.to_datetime(sales['date'])
+
+# Aggregations
+by_region = sales.groupby('region')['revenue'].sum().sort_values(ascending=False)
+by_month = sales.groupby(sales['date'].dt.to_period('M'))['revenue'].sum()
+by_category = sales.groupby('category')['revenue'].sum()
+
+# Visualizations
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+by_region.plot(kind='bar', ax=axes[0, 0], title='Revenue by Region')
+by_month.plot(ax=axes[0, 1], title='Revenue Over Time')
+by_category.plot(kind='pie', ax=axes[1, 0], title='Revenue by Category')
+
+# Summary stats
+summary = {
+    'total_revenue': sales['revenue'].sum(),
+    'avg_order_value': sales['revenue'].mean(),
+    'top_region': by_region.index[0],
+    'top_category': by_category.idxmax()
+}
+
+print(summary)
+plt.savefig('sales_analysis.png')
+```
+
+The agent reasons about *what* to analyze, then writes code to *perform* the analysis.
+
+### String Manipulation at Scale
+
+**Task: Extract domain names from 5,000 URLs**
+
+**Don't:** Try to parse each URL through reasoning
+
+**Do:**
+```python
+from urllib.parse import urlparse
+
+with open('urls.txt', 'r') as f:
+    urls = [line.strip() for line in f]
+
+domains = []
+for url in urls:
+    try:
+        parsed = urlparse(url)
+        domains.append(parsed.netloc)
+    except:
+        domains.append('INVALID_URL')
+
+# Count frequency
+from collections import Counter
+domain_counts = Counter(domains)
+
+for domain, count in domain_counts.most_common(10):
+    print(f"{domain}: {count}")
+```
+
+## Tasks Where Agents Should Reason Directly
+
+Not everything should be code. Let's clarify when reasoning is the right approach.
+
+### Novel Problem-Solving
+
+**Task: Debug why a deployment failed**
+
+**Why reasoning wins:**
+- Each failure is unique
+- Requires understanding context, logs, system state
+- Needs interpretation and hypothesis testing
+- May require trying different approaches
+
+**What the agent does:**
+- Reads error logs (reasoning)
+- Forms hypotheses about causes (reasoning)
+- Tests hypotheses (may write small diagnostic scripts)
+- Interprets results (reasoning)
+- Decides on solution (reasoning)
+- Implements fix (might involve code)
+
+### Tasks Requiring Judgment
+
+**Task: Prioritize customer feature requests**
+
+**Why reasoning wins:**
+- Involves subjective evaluation
+- Requires balancing multiple factors
+- Needs interpretation of customer feedback
+- Benefits from nuanced understanding
+
+**What the agent does:**
+- Reads feature requests
+- Considers business goals, technical feasibility, customer impact
+- Makes judgment calls
+- Explains reasoning behind prioritization
+
+### Situations Requiring Interpretation
+
+**Task: Analyze customer complaints to identify systemic issues**
+
+**Why reasoning wins:**
+- Requires understanding sentiment and context
+- Needs to identify patterns in unstructured text
+- Involves interpretation of meaning, not just data processing
+- Benefits from agent's language understanding
+
+The agent might write code for *counting* or *categorizing*, but the insight comes from reasoning.
+
+### Creative Work
+
+**Task: Write marketing copy for a new product**
+
+**Why reasoning wins:**
+- Inherently creative
+- Requires understanding audience and positioning
+- Benefits from agent's language generation capabilities
+- Not a computational problem
+
+### Ambiguous Situations Requiring Clarification
+
+**Task: Handle a customer support issue that's unclear**
+
+**Why reasoning wins:**
+- Requires understanding incomplete information
+- May need to ask clarifying questions
+- Needs to interpret customer intent
+- Benefits from conversational ability
+
+## The Hybrid Pattern
+
+The most effective approach often combines both:
+
+**Pattern: Agent reasons → writes code → interprets results → reasons about next steps**
+
+### Example: Sales Data Analysis
+
+**Agent's approach:**
+
+```
+Agent reasoning: "I need to analyze sales trends. The data is large
+(50,000 rows), so I should write code to process it efficiently."
+
+[Writes and runs code to load and aggregate data]
+
+Code output:
+{
+  "total_revenue": 5200000,
+  "top_product": "Widget Pro",
+  "growth_rate": 0.23,
+  "seasonal_pattern": "Q4 peak"
+}
+
+Agent reasoning: "The 23% growth rate is strong, but I notice Q4
+consistently outperforms other quarters. Let me investigate if this
+is driven by specific products or is across the board."
+
+[Writes and runs code to break down Q4 by product]
+
+Code output: {...}
+
+Agent reasoning: "The Q4 surge is primarily driven by Widget Pro,
+which aligns with the holiday season. This suggests we should..."
+
+[Generates strategic recommendations based on data]
+```
+
+**The agent used:**
+- **Reasoning** to decide what to analyze
+- **Code** to process the data
+- **Reasoning** to interpret results
+- **Code** to dig deeper into interesting patterns
+- **Reasoning** to generate insights and recommendations
+
+Neither pure reasoning nor pure coding would work as well.
+
+### Example: System Health Check
+
+```
+Agent reasoning: "I need to check health of all services. This is
+a repetitive check across many services—perfect for a script."
+
+[Writes code to check each service]
+
+for service in services:
+    status = check_health(service)
+    if status != 'healthy':
+        print(f"ISSUE: {service} - {status}")
+
+Output:
+ISSUE: payment-processor - high latency (850ms avg)
+ISSUE: email-service - connection pool exhausted
+
+Agent reasoning: "Two services have issues. Payment processor latency
+could be database-related. Let me check database performance."
+
+[Runs diagnostic query]
+
+Agent reasoning: "Database looks fine. The latency is likely network-
+related. Email service connection pool exhaustion suggests we need
+to increase the pool size. Let me check current configuration..."
+
+[Reads config file]
+
+Agent reasoning: "Pool size is set to 10, which is too low for
+current load. I recommend increasing to 50."
+```
+
+**Reasoning** identifies the problem and strategy. **Code** efficiently gathers data. **Reasoning** interprets and recommends.
+
+## How Agents Decide (and How You Can Guide Them)
+
+Agents don't automatically know when to write code vs. reason directly. They use judgment based on:
+
+1. **Task characteristics** (size, repetitiveness, computational nature)
+2. **Available tools** (if they have code execution, they can use it)
+3. **Your instructions** (you can guide them)
+
+### Guiding the Agent
+
+**Implicit guidance (agent's judgment):**
+```
+"Analyze the sales data in sales_2024.csv and identify the top 10
+products by revenue."
+```
+The agent will likely write code (data processing task).
+
+**Explicit guidance when needed:**
+```
+"Analyze sales_2024.csv. Write a Python script to:
+1. Load the CSV
+2. Aggregate revenue by product
+3. Sort and return top 10
+
+Then interpret the results and suggest strategies for the top products."
+```
+You're being explicit about the approach.
+
+**When to be explicit:**
+- Agent isn't using code when it should
+- You want a specific implementation approach
+- The task is complex and you want to ensure a structured approach
+
+## What This Pattern Achieves
+
+**Reliability:**
+Computational tasks get deterministic solutions, not probabilistic reasoning.
+
+**Efficiency:**
+Code processes data faster than reasoning through it step-by-step.
+
+**Scalability:**
+Agents can handle datasets that wouldn't fit in context.
+
+**Cost-effectiveness:**
+One LLM call to write code + fast execution < many LLM calls to process data.
+
+**Best use of each paradigm:**
+- Reasoning for decision-making and interpretation
+- Code for computation and data processing
+
+## Common Patterns Summary
+
+**Write code for:**
+- Data transformations
+- Numerical calculations
+- Repetitive operations
+- Large-scale processing
+- Precise computations
+- Performance-sensitive tasks
+
+**Use reasoning for:**
+- Novel problem-solving
+- Judgment and prioritization
+- Interpretation of results
+- Creative work
+- Ambiguous situations
+- Strategic decisions
+
+**Use both (the hybrid pattern):**
+- Complex analysis (reason about what to analyze, code to execute)
+- System debugging (reason about causes, code to gather diagnostics)
+- Data-driven decision making (code to process, reason to interpret)
+
+## What This Means for Agent Design
+
+When building agent systems:
+
+1. **Ensure agents have code execution capabilities**
+   - Python is common and versatile
+   - Shell access for system tasks
+   - SQL for database operations
+
+2. **Design tasks with this pattern in mind**
+   - Expect agents to write code for computational tasks
+   - Don't try to force everything through reasoning
+   - Provide clear instructions about when precision matters
+
+3. **Monitor how agents approach tasks**
+   - Are they reasoning when they should write code?
+   - Are they writing unnecessarily complex code for simple reasoning tasks?
+   - Adjust instructions based on observed patterns
+
+4. **Embrace the hybrid pattern**
+   - Best results come from combining strengths
+   - Reasoning guides strategy
+   - Code executes tactics
+
+## Looking Forward
+
+Understanding when agents should write code vs. reason directly is fundamental to building effective systems. But there's another crucial consideration for agent capabilities: access to knowledge.
+
+In the next chapter, we'll explore RAG (Retrieval-Augmented Generation) and how to give agents access to information beyond their training data and current context. This is essential for agents that need to work with proprietary knowledge, current information, or domain-specific data that wasn't in the model's training set.
+
+The pattern remains consistent: use the right tool for the job. Code for computation, reasoning for judgment, and—as we'll see—retrieval for knowledge.

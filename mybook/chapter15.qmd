@@ -1,0 +1,556 @@
+# Observability and Debugging {#sec-observability}
+
+*Understanding what your agent is thinking*
+
+When traditional software fails, you get stack traces, error messages, and deterministic reproduction steps. When agents fail, you get... something more elusive.
+
+"The agent didn't do what I expected" could mean:
+- It misunderstood instructions
+- It chose the wrong tool
+- It reasoned incorrectly
+- Context window was full
+- It hallucinated
+- The task was ambiguous
+
+Debugging an agent is more like debugging a human collaborator than debugging code. This chapter explores how to gain visibility into agent behavior and diagnose issues when they arise.
+
+## The Debugging Challenge
+
+### Traditional Software Debugging
+
+```
+Code executes → Error occurs → Stack trace → Find bug → Fix code → Test
+```
+
+Deterministic and traceable.
+
+### Agent Debugging
+
+```
+Agent reasons → Takes action → Wrong result → ??? → Why? → ???
+```
+
+Non-deterministic and opaque.
+
+**The challenges:**
+
+**1. Non-deterministic execution**
+- Same input may produce different outputs
+- Can't always reproduce issues
+- Bugs aren't "bugs" in traditional sense
+
+**2. Implicit reasoning**
+- Agent doesn't show its work by default
+- Decisions made internally
+- Tool choices not explained
+
+**3. Context sensitivity**
+- Behavior depends on full context
+- Context may be large and complex
+- Small context changes can dramatically affect output
+
+**4. Emergent behavior**
+- Result of complex interactions
+- Not reducible to single cause
+- Multiple contributing factors
+
+## What to Capture
+
+To debug effectively, you need comprehensive observability.
+
+### 1. Full Conversation Logs
+
+**Capture everything:**
+
+```json
+{
+  "conversation_id": "conv_abc123",
+  "timestamp": "2024-12-26T10:30:00Z",
+  "messages": [
+    {
+      "role": "system",
+      "content": "[Full system prompt]",
+      "tokens": 450
+    },
+    {
+      "role": "user",
+      "content": "Analyze the Q4 sales data",
+      "tokens": 8
+    },
+    {
+      "role": "assistant",
+      "content": "I'll analyze the Q4 sales data. First, let me load the data...",
+      "tokens": 25,
+      "tool_calls": [
+        {
+          "tool": "read_file",
+          "params": {"path": "sales_q4_2024.csv"},
+          "timestamp": "2024-12-26T10:30:01Z"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "[CSV data...]",
+      "tokens": 5000,
+      "tool_name": "read_file"
+    }
+  ]
+}
+```
+
+**Why full logs matter:**
+- See exactly what agent saw
+- Understand context available
+- Trace decision-making sequence
+- Reproduce issues
+
+### 2. Tool Calls and Results
+
+**Log every tool interaction:**
+
+```json
+{
+  "tool_call_id": "tc_xyz789",
+  "tool_name": "query_database",
+  "parameters": {
+    "sql": "SELECT * FROM customers WHERE last_purchase < '2024-01-01'"
+  },
+  "timestamp_start": "2024-12-26T10:30:05Z",
+  "timestamp_end": "2024-12-26T10:30:06Z",
+  "duration_ms": 1200,
+  "result_summary": "Returned 847 rows",
+  "result_tokens": 12000,
+  "status": "success"
+}
+```
+
+**Track:**
+- Which tools were called
+- In what order
+- With what parameters
+- What they returned
+- How long they took
+- Whether they succeeded or failed
+
+### 3. Token Usage and Timing
+
+**Performance metrics:**
+
+```json
+{
+  "task_id": "task_456",
+  "model": "gpt-4",
+  "total_tokens": 18500,
+  "input_tokens": 15000,
+  "output_tokens": 3500,
+  "cost_usd": 0.72,
+  "latency_ms": 8500,
+  "llm_calls": 4,
+  "tool_calls": 3
+}
+```
+
+**Use for:**
+- Cost tracking
+- Performance optimization
+- Identifying slow operations
+- Budget management
+
+### 4. Agent Reasoning (Chain of Thought)
+
+**Capture explicit reasoning:**
+
+Instead of just getting the answer, capture the thought process:
+
+```
+Agent reasoning:
+1. User wants to analyze Q4 sales data
+2. I need to load the data file first
+3. [Calls read_file tool]
+4. Data loaded successfully, 5000 rows
+5. I should summarize key metrics: total revenue, growth rate, top products
+6. [Writes Python script to calculate metrics]
+7. [Executes script]
+8. Results: Revenue $2.1M, 15% growth, Widget Pro is top product
+9. I'll now format this into a clear summary for the user
+```
+
+**Enable chain of thought:**
+
+```python
+system_prompt = """
+You are a data analyst. For each task:
+1. State what you're trying to accomplish
+2. Explain your approach
+3. Note what tools you'll use and why
+4. After each step, explain what you learned
+5. Show your reasoning before reaching conclusions
+"""
+```
+
+### 5. Error Messages and Exceptions
+
+**Don't just log that an error occurred—log context:**
+
+```json
+{
+  "error_id": "err_123",
+  "timestamp": "2024-12-26T10:30:15Z",
+  "error_type": "ToolExecutionError",
+  "message": "Database query timeout",
+  "tool": "query_database",
+  "parameters": {"sql": "..."},
+  "context": {
+    "conversation_id": "conv_abc123",
+    "previous_tool_calls": [...],
+    "agent_reasoning": "I was trying to get customer list..."
+  },
+  "stack_trace": "...",
+  "recovery_action": "Simplified query and retried"
+}
+```
+
+## Tools and Techniques
+
+### Conversation Viewers
+
+**Build UIs to visualize agent interactions:**
+
+```
+┌─ Conversation: conv_abc123 ────────────────────────────┐
+│                                                         │
+│ 🧑 User: Analyze Q4 sales data                         │
+│                                                         │
+│ 🤖 Agent: I'll analyze the Q4 sales data...            │
+│    └─ 🔧 Tool: read_file("sales_q4_2024.csv")         │
+│       └─ ✓ Success (5000 rows, 1.2s)                  │
+│    └─ 🔧 Tool: execute_python(analysis_script)        │
+│       └─ ✓ Success (metrics calculated, 0.5s)         │
+│                                                         │
+│ 🤖 Agent: Here's the Q4 analysis:                      │
+│    Total Revenue: $2.1M (↑15% YoY)                     │
+│    Top Product: Widget Pro                             │
+│    [Full response...]                                   │
+│                                                         │
+│ 💰 Cost: $0.72 | ⏱️ Time: 8.5s | 🪙 Tokens: 18.5K      │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Features to include:**
+- Message timeline
+- Tool call tree
+- Token usage per message
+- Cost breakdown
+- Ability to expand/collapse details
+- Search and filter
+
+### Replay and Analysis Tools
+
+**Reproduce agent sessions:**
+
+```python
+class SessionReplay:
+    def replay(self, conversation_id):
+        # Load conversation
+        conversation = db.get_conversation(conversation_id)
+
+        # Replay each step
+        for message in conversation.messages:
+            print(f"\n[{message.role.upper()}]")
+            print(message.content)
+
+            if message.tool_calls:
+                for tool_call in message.tool_calls:
+                    print(f"  Tool: {tool_call.tool}")
+                    print(f"  Params: {tool_call.params}")
+                    print(f"  Result: {tool_call.result[:100]}...")
+
+        # Analyze
+        self.analyze_conversation(conversation)
+
+    def analyze_conversation(self, conversation):
+        print("\n=== Analysis ===")
+        print(f"Total messages: {len(conversation.messages)}")
+        print(f"Tool calls: {count_tool_calls(conversation)}")
+        print(f"Total cost: ${conversation.total_cost}")
+        print(f"Tokens: {conversation.total_tokens}")
+
+        # Identify potential issues
+        if conversation.total_tokens > context_window * 0.9:
+            print("⚠️  Near context window limit")
+
+        if any(m.role == "tool" and "error" in m.content for m in conversation.messages):
+            print("⚠️  Tool errors occurred")
+```
+
+### A/B Testing Different Prompts
+
+**Compare prompt variations:**
+
+```python
+prompts = {
+    "v1": "Analyze the data and provide insights",
+    "v2": "Analyze the data. Show your reasoning step-by-step, then provide insights",
+    "v3": "You are an expert data analyst. Analyze the data methodically: 1) Summarize data 2) Identify patterns 3) Generate insights"
+}
+
+results = {}
+for version, prompt in prompts.items():
+    # Run same task with different prompts
+    result = agent.run(task, system_prompt=prompt)
+
+    results[version] = {
+        "success_rate": evaluate_success(result),
+        "avg_cost": result.cost,
+        "avg_latency": result.latency,
+        "quality_score": human_rating(result)
+    }
+
+# Compare
+print_comparison_table(results)
+```
+
+## Common Failure Patterns and How to Identify Them
+
+### Pattern 1: Context Window Overflow
+
+**Symptoms:**
+- Agent "forgets" earlier information
+- Behavior changes mid-conversation
+- Repeats previous actions
+- Asks for information already provided
+
+**Diagnosis:**
+```python
+def check_context_window(conversation):
+    total_tokens = sum(msg.tokens for msg in conversation.messages)
+    window_size = MODEL_CONTEXT_WINDOWS[conversation.model]
+
+    utilization = total_tokens / window_size
+
+    if utilization > 0.9:
+        return {
+            "issue": "context_window_full",
+            "utilization": f"{utilization*100:.1f}%",
+            "recommendation": "Summarize conversation or use sliding window"
+        }
+```
+
+**Fix:**
+- Implement sliding window (drop oldest messages)
+- Summarize conversation periodically
+- Use RAG instead of including full documents
+
+### Pattern 2: Tool Misuse
+
+**Symptoms:**
+- Agent calls wrong tool
+- Agent passes incorrect parameters
+- Agent doesn't call tool when it should
+
+**Diagnosis:**
+```python
+def analyze_tool_usage(conversation):
+    for tool_call in conversation.get_tool_calls():
+        # Check if tool was appropriate
+        expected_tool = infer_expected_tool(tool_call.context)
+        if tool_call.tool != expected_tool:
+            log_warning(f"Used {tool_call.tool} but expected {expected_tool}")
+
+        # Check parameters
+        if not validate_parameters(tool_call.tool, tool_call.params):
+            log_warning(f"Invalid parameters for {tool_call.tool}")
+```
+
+**Fix:**
+- Improve tool descriptions
+- Provide examples in descriptions
+- Add parameter validation
+- Include error messages in tool responses
+
+### Pattern 3: Instruction Misinterpretation
+
+**Symptoms:**
+- Agent does something different than requested
+- Agent focuses on wrong aspect
+- Agent's interpretation doesn't match intent
+
+**Diagnosis:**
+Look at agent's initial reasoning:
+```
+Agent's understanding: "User wants to delete old logs"
+Actual intent: "User wants to archive old logs"
+```
+
+**Fix:**
+- More specific instructions
+- Examples of correct behavior
+- Explicit success criteria
+- Ask agent to confirm understanding before executing
+
+### Pattern 4: Hallucination in Reasoning
+
+**Symptoms:**
+- Agent states "facts" not in data
+- Agent makes up tool results
+- Agent invents information
+
+**Diagnosis:**
+```python
+def check_for_hallucination(response, available_data):
+    claims = extract_factual_claims(response)
+
+    for claim in claims:
+        if not verify_claim_in_data(claim, available_data):
+            log_warning(f"Potential hallucination: {claim}")
+            log_info(f"Data sources: {available_data.sources}")
+```
+
+**Fix:**
+- Require citations
+- Implement fact-checking layer
+- Use structured output (harder to hallucinate)
+- Add "I don't have this information" in system prompt
+
+## Debugging Workflow
+
+**When something goes wrong:**
+
+**1. Reproduce the issue**
+```python
+# Load the conversation
+conversation = get_conversation(problem_conversation_id)
+
+# Replay it
+replay_conversation(conversation)
+
+# Can you reproduce the issue?
+```
+
+**2. Examine the conversation log**
+```python
+# What did the agent see?
+print(conversation.system_prompt)
+print(conversation.messages)
+
+# Was critical information missing?
+# Was context window full?
+# Were there errors?
+```
+
+**3. Check tool usage**
+```python
+# Which tools were called?
+# Were they the right tools?
+# Did they return expected results?
+# Were there errors?
+
+for tool_call in conversation.tool_calls:
+    print(f"{tool_call.tool}: {tool_call.status}")
+```
+
+**4. Analyze reasoning**
+```python
+# What was the agent thinking?
+# Where did reasoning go wrong?
+
+for message in conversation.agent_messages:
+    if "reasoning" in message:
+        print(message.reasoning)
+```
+
+**5. Identify root cause**
+- Ambiguous instructions?
+- Missing context?
+- Tool description unclear?
+- Agent capability limit?
+- Data quality issue?
+
+**6. Implement fix**
+- Update instructions
+- Improve tool descriptions
+- Add validation
+- Change approach
+
+**7. Test fix**
+- Replay conversation with fix
+- Test on similar cases
+- Monitor in production
+
+## Production Monitoring
+
+**Don't wait for problems—monitor proactively:**
+
+```python
+class AgentMonitor:
+    def track_task(self, task_result):
+        # Record metrics
+        self.metrics.record({
+            "timestamp": now(),
+            "task_type": task_result.type,
+            "success": task_result.success,
+            "cost": task_result.cost,
+            "latency": task_result.latency,
+            "tokens": task_result.tokens
+        })
+
+        # Check for anomalies
+        if task_result.cost > self.baseline_cost * 3:
+            self.alert("High cost task", task_result)
+
+        if task_result.latency > SLA_LATENCY:
+            self.alert("Slow task", task_result)
+
+        if not task_result.success:
+            self.investigate_failure(task_result)
+
+    def daily_report(self):
+        return {
+            "total_tasks": self.count_tasks_today(),
+            "success_rate": self.calculate_success_rate(),
+            "avg_cost": self.average_cost(),
+            "avg_latency": self.average_latency(),
+            "error_breakdown": self.group_errors_by_type(),
+            "top_errors": self.most_common_errors()
+        }
+```
+
+**Key metrics to track:**
+- Success rate (% of tasks completed successfully)
+- Average cost per task
+- Average latency
+- Error rate and types
+- Tool usage patterns
+- Token consumption
+- Context window utilization
+
+## What Observability Gives You
+
+**Visibility:**
+- See what agent is doing
+- Understand why decisions were made
+- Trace execution path
+
+**Debuggability:**
+- Reproduce issues
+- Identify root causes
+- Test fixes
+
+**Optimization:**
+- Find performance bottlenecks
+- Identify cost drivers
+- Improve prompts and tools
+
+**Confidence:**
+- Monitor production behavior
+- Catch issues early
+- Validate agent performance
+
+## Looking Ahead
+
+Observability helps you understand what happened. But how do you know if your agent system works *before* deploying it to production?
+
+The next chapter explores testing and evaluation for agent systems—how to systematically assess whether your agents do what you want them to, and how to catch regressions when you make changes.
+
+Because hope is not a testing strategy.

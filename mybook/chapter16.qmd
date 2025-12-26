@@ -1,0 +1,582 @@
+# Testing and Evaluation {#sec-testing}
+
+*How do you know if your agent system works?*
+
+Traditional software testing: Write test, run code, check if output matches expected. Pass or fail. Deterministic.
+
+Agent testing: Run agent, get... one of several valid outputs? Maybe? How do you even define "correct" for creative or judgment-based tasks?
+
+This chapter tackles the challenge of testing non-deterministic AI systems. How do you systematically evaluate agent performance, catch regressions, and build confidence that your system works—even when "works" is harder to define than a simple assertion?
+
+## The Testing Challenge
+
+### Traditional Unit Testing
+
+```python
+def test_add():
+    assert add(2, 3) == 5  # Deterministic
+```
+
+Every run, same inputs → same output.
+
+### Agent Testing?
+
+```python
+def test_agent_analyzes_data():
+    result = agent.analyze(data)
+    assert result == ???  # What should we assert?
+```
+
+Same inputs might produce different (but equally valid) outputs.
+
+**The challenges:**
+
+**1. Non-deterministic outputs**
+- Temperature > 0 means variability
+- Different phrasings of same answer
+- Different but equally valid approaches
+
+**2. Subjective correctness**
+- Is this summary "good enough"?
+- Is this email "professional"?
+- Are these insights "valuable"?
+
+**3. Complex outputs**
+- Not just a number or boolean
+- Full text, reasoning, multiple tool calls
+- Hard to assert against
+
+**4. Emergent behavior**
+- Result of multi-step reasoning
+- Can't unit test individual steps easily
+- Integration test everything
+
+## Evaluation Approaches
+
+Different strategies for different aspects of agent systems.
+
+### 1. Test on Held-Out Example Sets
+
+**Build a dataset of test cases:**
+
+```python
+test_cases = [
+    {
+        "input": "Analyze Q4 sales data",
+        "data_file": "test_data/q4_sales.csv",
+        "expected_insights": [
+            "Revenue increased 15%",
+            "Widget Pro is top product",
+            "December had highest sales"
+        ],
+        "expected_metrics": {
+            "total_revenue": 2100000,
+            "growth_rate": 0.15
+        }
+    },
+    # ... more test cases
+]
+```
+
+**Run agent on each:**
+
+```python
+def test_agent_analysis():
+    for test_case in test_cases:
+        result = agent.analyze(test_case["data_file"])
+
+        # Check that key insights are present
+        for expected in test_case["expected_insights"]:
+            assert contains_concept(result.text, expected)
+
+        # Check metrics are accurate
+        assert result.metrics["total_revenue"] == pytest.approx(
+            test_case["expected_metrics"]["total_revenue"],
+            rel=0.01  # 1% tolerance
+        )
+```
+
+**Benefits:**
+- Systematic coverage
+- Regression detection
+- Quantitative metrics
+
+**Limitations:**
+- Test cases may not cover all scenarios
+- "Contains concept" is fuzzy matching
+- Maintenance overhead
+
+### 2. Manual Review of Outputs
+
+**Human-in-the-loop evaluation:**
+
+```python
+def evaluate_customer_support_responses():
+    test_tickets = load_test_tickets()
+
+    for ticket in test_tickets:
+        response = agent.generate_response(ticket)
+
+        # Human reviews
+        rating = human_reviewer.rate(
+            ticket=ticket,
+            response=response,
+            criteria=["accuracy", "helpfulness", "tone", "completeness"]
+        )
+
+        # Record results
+        results.append({
+            "ticket_id": ticket.id,
+            "ratings": rating,
+            "response": response
+        })
+
+    # Aggregate
+    avg_accuracy = mean([r["ratings"]["accuracy"] for r in results])
+    avg_helpfulness = mean([r["ratings"]["helpfulness"] for r in results])
+
+    # Assert minimum quality
+    assert avg_accuracy >= 4.0  # Out of 5
+    assert avg_helpfulness >= 4.0
+```
+
+**When to use:**
+- Quality-sensitive outputs
+- Subjective criteria
+- Building initial test sets
+- Validating automated evaluation
+
+**Limitations:**
+- Time-consuming
+- Expensive
+- Doesn't scale
+- Subject to reviewer bias
+
+### 3. LLM-as-Judge: Second Model Evaluates First
+
+**Use another LLM to evaluate outputs:**
+
+```python
+def llm_evaluate(response, criteria):
+    evaluation_prompt = f"""
+    Evaluate this customer support response:
+
+    Response:
+    {response}
+
+    Criteria:
+    - Accuracy: Does it answer the question correctly?
+    - Completeness: Does it address all parts of the question?
+    - Tone: Is it professional and empathetic?
+    - Clarity: Is it easy to understand?
+
+    For each criterion, rate 1-5 and explain.
+    Output as JSON.
+    """
+
+    evaluation = evaluator_llm.generate(evaluation_prompt)
+    return json.loads(evaluation)
+
+# Use in tests
+def test_response_quality():
+    response = agent.generate_response(test_ticket)
+    evaluation = llm_evaluate(response, QUALITY_CRITERIA)
+
+    assert evaluation["accuracy"] >= 4
+    assert evaluation["completeness"] >= 4
+    assert evaluation["tone"] >= 4
+```
+
+**Benefits:**
+- Scalable (automated)
+- Can evaluate complex criteria
+- Consistent (same evaluator)
+- Fast
+
+**Limitations:**
+- Evaluator can be wrong
+- Adding AI to test AI (meta-problem)
+- Cost of evaluation calls
+- May not catch subtle issues
+
+### 4. Specific Metrics
+
+**Measure concrete aspects:**
+
+**Completion rate:**
+```python
+def test_task_completion():
+    completed = 0
+    failed = 0
+
+    for task in test_tasks:
+        result = agent.execute(task)
+        if result.status == "completed":
+            completed += 1
+        else:
+            failed += 1
+
+    completion_rate = completed / len(test_tasks)
+    assert completion_rate >= 0.95  # 95% should complete
+```
+
+**Cost per task:**
+```python
+def test_cost_efficiency():
+    costs = []
+
+    for task in test_tasks:
+        result = agent.execute(task)
+        costs.append(result.cost)
+
+    avg_cost = mean(costs)
+    assert avg_cost <= MAX_ACCEPTABLE_COST
+```
+
+**Latency:**
+```python
+def test_performance():
+    latencies = []
+
+    for task in test_tasks:
+        start = time.time()
+        result = agent.execute(task)
+        latency = time.time() - start
+        latencies.append(latency)
+
+    p95_latency = percentile(latencies, 95)
+    assert p95_latency <= SLA_LATENCY
+```
+
+**Error types:**
+```python
+def test_error_handling():
+    errors_by_type = defaultdict(int)
+
+    for task in test_tasks:
+        result = agent.execute(task)
+        if result.error:
+            errors_by_type[result.error_type] += 1
+
+    # No critical errors
+    assert errors_by_type["data_loss"] == 0
+    assert errors_by_type["security_violation"] == 0
+
+    # Acceptable error rate for recoverable issues
+    total_errors = sum(errors_by_type.values())
+    error_rate = total_errors / len(test_tasks)
+    assert error_rate <= 0.05  # 5% error rate acceptable
+```
+
+## Building Evaluation Datasets
+
+Good tests require good test data.
+
+### Representative Examples
+
+**Cover the distribution of real tasks:**
+
+```python
+# Don't just test happy paths
+test_dataset = {
+    "simple_cases": [...],      # 40% - routine operations
+    "edge_cases": [...],         # 30% - unusual but valid
+    "ambiguous_cases": [...],    # 20% - require clarification
+    "error_cases": [...],        # 10% - should fail gracefully
+}
+```
+
+### Include Edge Cases
+
+**Test boundary conditions:**
+
+```
+- Empty input
+- Very large input (approaching context window)
+- Malformed data
+- Missing required fields
+- Contradictory information
+- Out-of-domain requests
+- Ambiguous instructions
+```
+
+### Golden Outputs
+
+**For cases with clear right answers, document them:**
+
+```python
+golden_examples = {
+    "calculate_total": {
+        "input": {"items": [10, 20, 30]},
+        "expected_output": 60,
+        "tolerance": 0  # Exact match required
+    },
+    "summarize_article": {
+        "input": "article_text.txt",
+        "golden_summary": "The article discusses...",
+        "evaluation": "semantic_similarity",  # Not exact match
+        "min_similarity": 0.85
+    }
+}
+```
+
+### Versioning Test Datasets
+
+**Track evolution:**
+
+```
+tests/
+  v1/  # Initial test set
+  v2/  # Added edge cases after bug found
+  v3/  # Expanded coverage for new features
+  current -> v3  # Symlink to current version
+```
+
+## Continuous Evaluation
+
+Don't just test once—monitor ongoing performance.
+
+### Regression Testing
+
+**Catch when changes break things:**
+
+```python
+class RegressionTestSuite:
+    def __init__(self):
+        self.baseline_results = load_baseline()
+
+    def run(self, current_agent):
+        current_results = {}
+
+        for test_case in self.test_cases:
+            result = current_agent.execute(test_case)
+            current_results[test_case.id] = self.evaluate(result)
+
+        # Compare to baseline
+        regressions = self.find_regressions(
+            self.baseline_results,
+            current_results
+        )
+
+        if regressions:
+            raise RegressionError(f"Found {len(regressions)} regressions")
+
+    def find_regressions(self, baseline, current):
+        regressions = []
+
+        for test_id in baseline:
+            if current[test_id].quality < baseline[test_id].quality - REGRESSION_THRESHOLD:
+                regressions.append({
+                    "test_id": test_id,
+                    "baseline_quality": baseline[test_id].quality,
+                    "current_quality": current[test_id].quality
+                })
+
+        return regressions
+```
+
+**When to run:**
+- Before deploying prompt changes
+- After updating tools
+- When switching models
+- On schedule (nightly)
+
+### Production Monitoring as Testing
+
+**Real-world validation:**
+
+```python
+class ProductionEvaluator:
+    def sample_and_evaluate(self):
+        # Sample 1% of production traffic
+        sample = random.sample(todays_tasks, int(len(todays_tasks) * 0.01))
+
+        # Evaluate sample
+        results = []
+        for task in sample:
+            # Get result (already completed)
+            result = get_completed_task_result(task.id)
+
+            # Evaluate
+            quality = llm_evaluate(result)
+            results.append(quality)
+
+        # Alert if quality drops
+        avg_quality = mean(results)
+        if avg_quality < QUALITY_THRESHOLD:
+            alert_team("Production quality degradation detected")
+
+        return results
+```
+
+### Feedback Loops from Users
+
+**Incorporate user ratings:**
+
+```python
+class UserFeedbackEvaluator:
+    def analyze_user_satisfaction(self):
+        # Collect user ratings
+        ratings = db.query("""
+            SELECT task_id, user_rating, user_comment
+            FROM task_feedback
+            WHERE created_at >= NOW() - INTERVAL '7 days'
+        """)
+
+        # Aggregate
+        avg_rating = mean([r.user_rating for r in ratings])
+        low_rated = [r for r in ratings if r.user_rating <= 2]
+
+        # Identify patterns
+        common_issues = self.analyze_negative_feedback(low_rated)
+
+        # Report
+        return {
+            "avg_rating": avg_rating,
+            "low_rated_count": len(low_rated),
+            "common_issues": common_issues
+        }
+```
+
+## Testing Strategies for Different Agent Types
+
+### Classification/Routing Agents
+
+**Measurable with traditional metrics:**
+
+```python
+def test_ticket_routing():
+    labeled_test_set = load_labeled_tickets()
+
+    correct = 0
+    for ticket in labeled_test_set:
+        predicted_category = agent.classify(ticket)
+        if predicted_category == ticket.true_category:
+            correct += 1
+
+    accuracy = correct / len(labeled_test_set)
+    assert accuracy >= 0.90  # 90% accuracy required
+```
+
+### Content Generation Agents
+
+**Require qualitative evaluation:**
+
+```python
+def test_email_generation():
+    test_scenarios = load_test_scenarios()
+
+    for scenario in test_scenarios:
+        email = agent.generate_email(scenario)
+
+        # Automated checks
+        assert len(email) >= 50  # Not too short
+        assert contains_required_elements(email, scenario)
+        assert no_profanity(email)
+        assert professional_tone(email)  # LLM-as-judge
+
+        # Manual review for sample
+        if random.random() < 0.1:  # 10% sample
+            queue_for_human_review(email, scenario)
+```
+
+### Multi-Step Reasoning Agents
+
+**Test process and outcome:**
+
+```python
+def test_analysis_agent():
+    result = agent.analyze_data(test_data)
+
+    # Check process
+    assert "read_file" in result.tools_used
+    assert "execute_python" in result.tools_used
+
+    # Check outcome
+    assert result.contains_insights()
+    assert result.metrics_accurate()
+    assert result.recommendations_actionable()
+```
+
+## What Testing Means for Agents
+
+### What It Is
+
+**Systematic evaluation accepting some uncertainty**
+
+- Can't achieve deterministic test coverage
+- But can systematically evaluate quality
+- Build confidence through multiple approaches
+- Accept that perfect testing is impossible
+
+**Combination of approaches**
+
+- Automated tests for what's measurable
+- Manual review for what's subjective
+- LLM-as-judge for scalable evaluation
+- Production monitoring for real-world validation
+
+**Continuous process**
+
+- Initial test set
+- Expand based on failures
+- Monitor production
+- Iterate and improve
+
+### What It Is Not
+
+**Achieving the deterministic confidence of traditional software testing**
+
+- Agents are probabilistic
+- Outputs vary
+- "Correct" is often subjective
+- Can't write perfect test suite
+
+**One-time activity**
+
+- Must test continuously
+- Tests evolve with system
+- New edge cases emerge
+- User needs change
+
+## Practical Testing Checklist
+
+✅ **Core Functionality:**
+- [ ] Agent completes basic tasks successfully
+- [ ] Agent handles edge cases reasonably
+- [ ] Agent fails gracefully on invalid input
+- [ ] Error messages are helpful
+
+✅ **Quality:**
+- [ ] Outputs meet minimum quality standards
+- [ ] Key criteria consistently satisfied
+- [ ] Regressions detected when changes made
+- [ ] Production quality monitored
+
+✅ **Performance:**
+- [ ] Latency within SLA
+- [ ] Cost per task acceptable
+- [ ] No memory leaks or resource exhaustion
+- [ ] Scales to expected load
+
+✅ **Safety:**
+- [ ] Agent respects constraints
+- [ ] Dangerous operations require approval
+- [ ] Security boundaries enforced
+- [ ] Audit logs captured
+
+✅ **Reliability:**
+- [ ] Success rate acceptable
+- [ ] Error rate within tolerance
+- [ ] Recovery from failures works
+- [ ] Retry logic functions correctly
+
+## Looking Ahead
+
+We've now covered all the practical considerations for building agent systems: tools, instructions, cost management, observability, and testing.
+
+Part III equipped you with the knowledge to build production-ready agent systems. But there's more to explore: advanced patterns, limitations, and strategic decisions.
+
+Part IV tackles the bigger picture: When do you need multiple agents? What are agents bad at? Should you build or buy? And how do you actually get started?
+
+The foundation is complete. Now let's explore the frontiers.

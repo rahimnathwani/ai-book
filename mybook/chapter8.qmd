@@ -1,0 +1,620 @@
+# Instructing Agents Effectively {#sec-instructing-agents}
+
+*The art and science of prompt engineering*
+
+You've given your agent powerful tools. You've connected it to your systems. Now comes the moment of truth: You need to tell it what to do.
+
+This is where many people stumble. They treat agent instructions like casual conversation or, conversely, like they're programming in a traditional language. Neither approach works well.
+
+Instructing agents effectively is its own skill—part communication, part specification, part anticipation. This chapter explores why instruction quality matters enormously and provides principles and patterns for getting agents to do what you actually want.
+
+## Why Instruction Quality Matters Enormously
+
+Let's start with a fundamental truth: **With agents, you get what you ask for, not what you meant.**
+
+### The Garbage In, Garbage Out Problem
+
+Traditional programming has always had this principle, but with code, you get syntax errors when you're ambiguous. The compiler won't let you proceed with unclear instructions.
+
+Agents are different:
+- They accept any natural language input
+- They interpret it using their best judgment
+- They produce output even if they misunderstood
+- They can't ask "what did you mean by X?"
+
+**Vague instruction:** "Clean up this data"
+
+**What you meant:** Remove duplicate rows and standardize date formats
+
+**What the agent might do:**
+- Remove all rows with any missing values
+- Delete outliers it considers "dirty"
+- Reformat column names
+- Sort alphabetically
+- Some combination of the above
+
+All of these are reasonable interpretations of "clean up." None might be what you wanted.
+
+### Example: The Difference Instructions Make
+
+**Task:** Process customer feedback survey responses
+
+**Vague instruction:**
+```
+Analyze the survey responses and give me insights.
+```
+
+**Agent output:**
+"I analyzed 500 responses. Most customers are satisfied. Some mentioned issues with shipping. Here are three example responses..."
+
+**Specific instruction:**
+```
+Analyze the survey responses and provide:
+1. Overall satisfaction score (1-5 average)
+2. Top 3 mentioned pain points with frequency counts
+3. Common feature requests, ranked by mentions
+4. Breakdown of satisfaction by customer tenure
+   (new vs. existing customers)
+5. Specific quotes that illustrate key themes
+
+Format as a structured report with sections for each item.
+```
+
+**Agent output:**
+A comprehensive report with exact metrics, ranked lists, segmented analysis, and supporting quotes—ready to share with stakeholders.
+
+The agent is the same. The tools are the same. The difference is instruction quality.
+
+## Principles of Effective Agent Instructions
+
+Let's build a framework for writing instructions that get results.
+
+### 1. Be Specific About the Goal and Success Criteria
+
+Don't just say what to do—explain what success looks like.
+
+**Weak:**
+```
+Fix the bugs in this code.
+```
+
+**Strong:**
+```
+Fix the bugs in this code so that all existing unit tests pass
+and the code handles empty input gracefully without crashing.
+Success criteria: All tests pass, no exceptions on edge cases.
+```
+
+**Weak:**
+```
+Improve this documentation.
+```
+
+**Strong:**
+```
+Improve this documentation so that a new developer can set up
+the development environment and run the application successfully
+within 30 minutes without asking questions. Add:
+- Step-by-step setup instructions
+- Common troubleshooting issues
+- Examples of basic usage
+Success criteria: A new developer can follow it independently.
+```
+
+Specific goals give the agent a target to work toward and a way to judge when it's done.
+
+### 2. Provide Context the Agent Needs
+
+The agent doesn't know what you know. Give it relevant background.
+
+**Without context:**
+```
+Calculate the ROI for our marketing campaigns.
+```
+
+**Agent confusion:** ROI based on what? Revenue? Signups? Over what period? Against what costs?
+
+**With context:**
+```
+Calculate the ROI for our Q4 marketing campaigns. ROI should be:
+(Revenue generated from campaign-attributed customers - Campaign costs) / Campaign costs
+
+Context:
+- Campaign costs are in marketing_spend_q4.csv
+- Revenue data is in sales_data.csv, use 'utm_campaign' to attribute
+- Calculate for each campaign separately, then overall
+- Q4 is October-December 2024
+
+Ignore organic traffic in this analysis.
+```
+
+Now the agent has everything it needs.
+
+### 3. Specify Constraints and Boundaries
+
+Tell the agent what NOT to do, especially for sensitive operations.
+
+**Without constraints:**
+```
+Debug the database performance issue.
+```
+
+**Agent might:**
+- Delete rows to reduce table size
+- Drop and recreate indexes (on production!)
+- Modify queries system-wide
+
+**With constraints:**
+```
+Debug the database performance issue.
+
+Constraints:
+- READ ONLY: Do not modify any data or schema
+- Analyze query performance using EXPLAIN, not by running queries
+- If you identify issues, document recommended changes but
+  DO NOT apply them
+- Focus on the customer_orders table which is the suspected problem
+
+Output: A report of findings and recommended optimizations,
+        not actual changes.
+```
+
+Constraints prevent dangerous operations and keep the agent in safe territory.
+
+### 4. Include Examples When Helpful
+
+Examples clarify expectations, especially for format or style.
+
+**Task:** Generate social media posts from blog articles
+
+**Without examples:**
+```
+Create social media posts from this blog article.
+```
+
+**With examples:**
+```
+Create social media posts from this blog article.
+
+Format (3 posts):
+1. Twitter/X post (280 characters)
+2. LinkedIn post (professional tone, 150-200 words)
+3. Instagram caption (casual tone, include 3-5 hashtags)
+
+Example style (for different article):
+Twitter: "🚀 Just shipped: new feature that cuts deployment time by 50%. Our DevOps team shares the story: [link] #DevOps #CI/CD"
+LinkedIn: "I'm excited to share insights from our journey optimizing our deployment pipeline. Over six months, our team..."
+
+Match this style but for the current article's content.
+```
+
+Examples calibrate the agent's output to your expectations.
+
+### 5. Anticipate Edge Cases
+
+Think about what could go wrong or be ambiguous.
+
+**Task:** Process uploaded customer documents
+
+**Without edge case handling:**
+```
+Extract customer information from uploaded documents.
+```
+
+**With edge case handling:**
+```
+Extract customer information from uploaded documents.
+
+Expected fields: name, email, phone, address, account_number
+
+Edge cases to handle:
+- If document is not a PDF or image: Skip with error message
+- If OCR produces low-confidence text: Flag for manual review
+- If required fields are missing: Note which are missing, don't fail
+- If multiple documents per customer: Process all, merge information
+- If document is corrupted: Log error, move to error folder
+
+Output: JSON for each document with extracted data + confidence score
+```
+
+Anticipating edge cases leads to robust agent behavior.
+
+### 6. Structure Complex Instructions
+
+For multi-step tasks, provide structure:
+
+**Unstructured:**
+```
+Set up monitoring for our production services and make sure we get
+alerted when things go wrong and also create dashboards for the key
+metrics and document what you set up.
+```
+
+**Structured:**
+```
+Set up monitoring for our production services.
+
+Tasks:
+1. Configure alerts for:
+   - API response time > 2 seconds (average over 5 min)
+   - Error rate > 1% (over 10 min window)
+   - Database connection pool utilization > 80%
+
+2. Create dashboards showing:
+   - Request rate and latency (24 hour view)
+   - Error rates by endpoint
+   - System resource utilization
+
+3. Document what you created:
+   - List of all alerts with thresholds
+   - Dashboard locations and what they show
+   - How to access and modify monitoring config
+
+Use Datadog (credentials in environment).
+Create alerts in #ops-alerts Slack channel.
+```
+
+Structure makes complex instructions manageable.
+
+## Structured Outputs for Reliable Handoffs
+
+When agents need to communicate with other systems (or other agents), structured output is crucial.
+
+### Why Structure Matters
+
+**Unstructured agent output:**
+```
+I found 3 high-priority items: Item A needs attention because X,
+item B is urgent due to Y, and also item C has issues. There were
+5 medium priority items...
+```
+
+**Challenge:** Your downstream system needs to parse prose to extract the data. Fragile and error-prone.
+
+**Structured agent output:**
+```json
+{
+  "high_priority": [
+    {"id": "A", "reason": "X", "assigned_to": null},
+    {"id": "B", "reason": "Y", "assigned_to": null},
+    {"id": "C", "reason": "Z", "assigned_to": null}
+  ],
+  "medium_priority": [
+    {"id": "D", "reason": "..."},
+    {"id": "E", "reason": "..."},
+    ...
+  ],
+  "low_priority": [],
+  "total_items_analyzed": 8
+}
+```
+
+**Benefit:** Your system can reliably parse and process the data.
+
+### Requesting Structured Output
+
+Most modern LLMs support structured output requests. The technique varies by model but typically involves:
+
+**1. Specifying the schema in your instruction:**
+
+```
+Analyze these support tickets and output a JSON array with this structure:
+
+[
+  {
+    "ticket_id": "string",
+    "priority": "high|medium|low",
+    "category": "billing|technical|sales|other",
+    "sentiment": "positive|neutral|negative",
+    "requires_escalation": boolean,
+    "summary": "string (max 100 chars)"
+  }
+]
+
+Ensure valid JSON. Do not include markdown formatting or explanations,
+just the raw JSON array.
+```
+
+**2. Using schema validation (model-specific features):**
+
+Some APIs accept JSON schemas:
+
+```python
+response = client.complete(
+    prompt="Analyze these tickets...",
+    response_format={
+        "type": "json_schema",
+        "json_schema": {
+            "name": "ticket_analysis",
+            "schema": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "ticket_id": {"type": "string"},
+                        "priority": {
+                            "type": "string",
+                            "enum": ["high", "medium", "low"]
+                        },
+                        # ...
+                    },
+                    "required": ["ticket_id", "priority", "category"]
+                }
+            }
+        }
+    }
+)
+```
+
+The model will output valid JSON matching your schema.
+
+### When to Use Structured Output
+
+**Use structured output when:**
+- The agent's output will be consumed by another system
+- You need to parse and process the results programmatically
+- Consistency is critical (same format every time)
+- You're building agent-to-agent workflows
+
+**Use natural language when:**
+- The output is for human reading
+- You want the agent to explain reasoning
+- Format flexibility is acceptable
+- The task is exploratory or creative
+
+## The Difference Between Prompting and Programming
+
+This is crucial to understand: **Prompting is not programming, even though it sometimes feels similar.**
+
+### What Prompting Is
+
+**Clear communication of intent and constraints**
+
+You're describing:
+- What you want to achieve (the goal)
+- What information is relevant (context)
+- What the result should look like (format/structure)
+- What rules apply (constraints)
+- What success means (criteria)
+
+You're communicating with an intelligent system that will use its judgment to accomplish the task.
+
+**Collaborative specification**
+
+You're not writing exact steps. You're describing the desired outcome and the boundaries, then trusting the agent's reasoning to figure out the path.
+
+Think of it like briefing a knowledgeable colleague:
+- Clear enough they understand what you want
+- Detailed enough they can work independently
+- Specific about important constraints
+- Trusting them to handle the details
+
+### What Prompting Is Not
+
+**Not precise control over execution path**
+
+You can't dictate every step like in traditional code:
+
+```python
+# Traditional programming: Exact steps
+for customer in customers:
+    if customer.status == "active":
+        balance = get_balance(customer.id)
+        if balance > 1000:
+            send_email(customer.email, "vip_template")
+```
+
+Prompts aren't this precise. The agent decides its approach.
+
+**Not deterministic**
+
+Same prompt might produce different (but valid) results:
+- Different phrasings
+- Different tool sequences
+- Different intermediate reasoning
+
+All might accomplish the goal correctly.
+
+**Not syntax-checked**
+
+There's no compiler to tell you your prompt is ambiguous or incomplete. You only find out when the agent does something unexpected.
+
+### The Mental Model Shift
+
+**Programming mindset:**
+"I will specify exactly what happens at each step"
+
+**Prompting mindset:**
+"I will describe what success looks like and let the agent figure out how to get there"
+
+**Programming:**
+"Do exactly this, in this order, with these exact parameters"
+
+**Prompting:**
+"Achieve this goal, following these constraints, and let me know if you find issues"
+
+This doesn't mean prompting is vague—good prompts are very specific about goals, constraints, and success criteria. But they're specific about outcomes, not execution paths.
+
+## Common Pitfalls and How to Avoid Them
+
+### Pitfall 1: Assuming the Agent Knows Your Context
+
+**Problem:** "Fix the issue with the email system"
+
+**What's wrong:** Which email system? What issue? How do you know there's an issue?
+
+**Solution:** Provide context
+```
+The customer complaint email system is rejecting emails with
+attachments larger than 5MB. This is causing customer frustration.
+The system should accept up to 20MB as per our policies.
+
+Investigate why the limit is set to 5MB and fix it to allow 20MB.
+```
+
+### Pitfall 2: Being Too Vague About Format
+
+**Problem:** "Summarize these customer reviews"
+
+**What's wrong:** How long? What format? What aspects to focus on?
+
+**Solution:** Specify format
+```
+Summarize these customer reviews as:
+- Overall sentiment (positive/neutral/negative)
+- Top 3 praised features
+- Top 3 complained-about issues
+- Notable quotes (2-3)
+- Recommendation for product team action
+
+Max 250 words total.
+```
+
+### Pitfall 3: Not Specifying What to Do on Errors
+
+**Problem:** "Process all invoices in the folder"
+
+**What's wrong:** What if some invoices can't be read? What if data is missing?
+
+**Solution:** Error handling instructions
+```
+Process all invoices in the folder.
+
+If an invoice can't be read (corrupted file):
+- Log the filename to errors.txt
+- Continue with remaining invoices
+
+If required data is missing from an invoice:
+- Extract what's available
+- Flag as incomplete in output
+- Note which fields are missing
+```
+
+### Pitfall 4: Forgetting to State Constraints
+
+**Problem:** "Optimize the database queries"
+
+**What's wrong:** The agent might modify production! Or add indexes that impact writes.
+
+**Solution:** State constraints clearly
+```
+Optimize the database queries for the reporting dashboard.
+
+Constraints:
+- Analyze only, do not modify the database
+- Provide recommendations, not implementation
+- Consider read performance only (this is a read-only dashboard)
+- Ensure suggestions are compatible with PostgreSQL 14
+```
+
+### Pitfall 5: Overloading a Single Prompt
+
+**Problem:**
+```
+Analyze our sales data, identify trends, predict next quarter, segment
+customers, find churners, recommend marketing strategies, create
+visualizations, and write a report.
+```
+
+**What's wrong:** Too many goals. Agent may do all superficially or get confused.
+
+**Solution:** Break into focused tasks or provide clear structure
+```
+Task 1: Analyze sales data and identify key trends
+- Load data from sales_data.csv
+- Calculate QoQ and YoY growth
+- Identify top/bottom performing segments
+- Output: trends_summary.json
+
+Once complete, I'll ask you to create predictions based on this analysis.
+```
+
+Or structure as subtasks within one prompt if they're related.
+
+## Iterating on Instructions
+
+Good instructions often come from iteration:
+
+1. **Start with a clear but basic instruction**
+2. **Run the agent**
+3. **Observe what it does wrong or misses**
+4. **Refine the instruction to address gaps**
+5. **Repeat**
+
+**Example iteration:**
+
+**Version 1:**
+```
+Analyze log files and find errors.
+```
+
+**Result:** Agent returns all log entries containing "error" (too much)
+
+**Version 2:**
+```
+Analyze log files and find critical errors that require investigation.
+```
+
+**Result:** Agent's judgment of "critical" doesn't match yours
+
+**Version 3:**
+```
+Analyze log files and find errors matching these criteria:
+- Level: ERROR or CRITICAL (not WARNING)
+- Not from scheduled_backup process (expected to log errors)
+- Occurring more than once in the time period
+- Include timestamp, source, and error message
+
+Output: List sorted by frequency, most common first.
+```
+
+**Result:** Now you get what you need.
+
+## What Prompting Means for Agents
+
+Let's clarify the distinction:
+
+**What prompting is:**
+- Clear communication of goals, context, and constraints
+- Specification of success criteria
+- Thoughtful anticipation of edge cases
+- Appropriate level of detail for the task
+- Trust in the agent to reason through the approach
+
+**What prompting is not:**
+- Precise control over every step (that's programming)
+- Guaranteed deterministic behavior (agents use judgment)
+- One-shot perfect instructions (iteration is normal)
+- A way to avoid thinking about your requirements (garbage in, garbage out)
+
+Effective prompting is a skill. Like any skill, it improves with practice and feedback.
+
+## Practical Tips Summary
+
+**1. Start with the goal:** What does success look like?
+
+**2. Add necessary context:** What does the agent need to know?
+
+**3. Specify format:** How should the output look?
+
+**4. Define constraints:** What should the agent NOT do?
+
+**5. Handle edge cases:** What could go wrong? How to handle it?
+
+**6. Provide examples:** What's the style/format you want?
+
+**7. Structure complex tasks:** Break down multi-step instructions
+
+**8. Request structured output when needed:** JSON for machine consumption
+
+**9. Iterate based on results:** Refine after seeing what the agent does
+
+**10. Be specific about outcomes, flexible about approach:** Define what, let the agent figure out how
+
+## Looking Ahead
+
+Great instructions guide agents to success. But instructions alone aren't always enough. Sometimes, the task requires more than reasoning in context—it requires actual computation.
+
+In the next chapter, we'll explore when agents should stop reasoning and start coding: the principle of having agents write code to execute complex operations rather than trying to do everything through in-context reasoning.
+
+This is a crucial pattern for building reliable, scalable agent systems.

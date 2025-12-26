@@ -1,0 +1,206 @@
+# The AI You Already Know {#sec-ai-you-know}
+
+*Establishing context for readers who have used AI but haven't built with it*
+
+You've likely used AI dozens of times already this week. When your email filtered out spam, when your phone unlocked by recognizing your face, when a store's website recommended products you might like—these are all AI systems at work. They're so integrated into our daily experience that we rarely pause to think about what's happening under the hood.
+
+But if you're reading this book, you're probably interested in moving beyond being a user of AI systems to being a builder of them. And to build effectively with the latest generation of AI agents, it's helpful to first understand what AI looked like before agents came along.
+
+This chapter establishes that foundation. We'll explore the AI models you've been using, likely without realizing it, and understand both what they are and—critically—what they are not. This contrast will prepare you for the fundamental shift that generative models and agents represent.
+
+## Classification Models: The Workhorse of Traditional AI
+
+For most of AI's history in production systems, the dominant pattern has been **classification**. At its core, classification is about mapping inputs to predefined categories. You give the model some data, and it tells you which bucket that data belongs to.
+
+### Image Classification
+
+Consider a bird identification app. You take a photo of a bird, and the app tells you it's a "Northern Cardinal" with 94% confidence. Under the hood, this is typically powered by a **Convolutional Neural Network** (CNN), a type of model specifically designed to process images.
+
+The CNN was trained on thousands of labeled images—pictures of cardinals tagged "Northern Cardinal," pictures of blue jays tagged "Blue Jay," and so on. Through training, it learned to recognize the patterns of colors, shapes, and textures that distinguish one bird species from another. When you submit your photo, the model processes it through many layers of learned transformations and outputs a probability distribution across all the bird species it knows about.
+
+What this model **is**: A highly specialized pattern recognition system that maps images to predefined categories.
+
+What this model **is not**: A system that understands what a bird is, can describe why it made its choice, or can generate new images of birds.
+
+### Sequence Classification
+
+Text classification follows a similar pattern. Sentiment analysis—determining whether a product review is positive, negative, or neutral—is a classic example. Historically, models like **Recurrent Neural Networks** (RNNs) or **Long Short-Term Memory** (LSTM) networks were used for these tasks.
+
+An LSTM processes text sequentially, word by word, maintaining an internal state that helps it understand context. After processing "The food was delicious but the service was terrible," it might output: 60% probability of "Mixed" sentiment, 25% "Negative," 15% "Positive."
+
+Again, the model maps input (text) to predefined categories (sentiment labels). It doesn't compose new reviews, doesn't understand the concept of customer service, and can't engage in a conversation about the restaurant.
+
+### The Classification Pattern
+
+The fundamental architecture of classification-based AI systems is straightforward:
+
+1. **Training phase**: The model learns from labeled examples (supervised learning)
+2. **Inference phase**: New inputs are mapped to the learned categories
+3. **Output**: A category label, often with a confidence score
+
+This pattern has powered countless successful applications:
+
+- Spam detection (spam vs. not spam)
+- Medical image analysis (tumor vs. no tumor)
+- Voice assistants understanding commands (play music, set alarm, check weather)
+- Credit card fraud detection (legitimate vs. fraudulent)
+- Handwriting recognition (mapping handwritten digits to 0-9)
+
+The beauty of classification is its predictability and specificity. The model does exactly what it was trained to do: recognize patterns it has seen before and categorize new examples accordingly.
+
+The limitation is equally clear: the model cannot handle anything outside its predefined categories. Show a bird classifier a picture of a dog, and it will still tell you it's some species of bird (whichever one the dog looks most like). It has no concept of "I don't know" or "this isn't a bird"—unless you explicitly train it on a "not a bird" category.
+
+## Beyond Classification: Other Recognition Models
+
+While classification is the foundation, modern AI systems often need to do more than just assign a single label to an entire input. They need to find objects, locate text, or identify precise regions of interest. These recognition tasks build on classification but add spatial or structural awareness.
+
+### Object Detection
+
+Consider a self-driving car's vision system. It doesn't just need to know "there is a pedestrian in this image." It needs to know *where* the pedestrian is, along with where the cars are, where the traffic lights are, and where the lane markings are—all simultaneously.
+
+**Object detection** models like YOLO (You Only Look Once) or Faster R-CNN extend classification by:
+
+1. Proposing multiple regions of interest within an image
+2. Classifying what's in each region
+3. Drawing bounding boxes around detected objects
+4. Outputting multiple classifications per image, each with location data
+
+The output might be: "Person at coordinates (120, 45, 200, 300), 96% confidence; Car at coordinates (450, 100, 680, 250), 89% confidence; Stop sign at coordinates (50, 30, 100, 80), 94% confidence."
+
+This is still fundamentally classification—just repeated across many regions of the image. The model identifies and locates things, but it doesn't understand the scene, can't predict what will happen next, and can't generate an image of a car.
+
+### Image Segmentation
+
+Going a step further, **segmentation** models classify every single pixel in an image. Instead of drawing boxes around objects, they create precise masks.
+
+In medical imaging, for instance, a segmentation model might highlight every pixel belonging to a tumor in an MRI scan. This pixel-level classification enables precise measurement and analysis.
+
+In consumer applications, the "portrait mode" blur effect on smartphone cameras uses segmentation to identify exactly which pixels are the person (keep in focus) versus the background (blur).
+
+### Optical Character Recognition (OCR)
+
+OCR is another specialized recognition task. Point your phone at a document, and apps can extract the text. Systems like Tesseract or modern deep learning OCR models:
+
+1. Detect regions of text in an image
+2. Segment individual characters or words
+3. Classify each character
+4. Output the recognized text
+
+Modern OCR systems can handle complex layouts, multiple languages, and varying fonts with impressive accuracy. But fundamentally, they're still recognizing patterns they were trained on and mapping them to predefined characters.
+
+### What These Models Are and Aren't
+
+All these recognition models share key characteristics:
+
+**What they are:**
+- Pattern recognition systems trained on specific types of data
+- Highly specialized for particular tasks (images → labels, images → boxes, images → text)
+- Deterministic in architecture (though individual predictions may vary slightly)
+- Fast and efficient at inference time
+- Excellent at tasks they were specifically trained for
+
+**What they are not:**
+- General-purpose reasoning systems
+- Capable of understanding context or meaning deeply
+- Able to handle tasks outside their training domain
+- Creative or generative
+- Able to explain their decisions in natural language
+
+These models identify and locate things in data. They're the AI equivalent of a highly skilled specialist who can instantly recognize thousands of specific patterns but can't step outside their narrow expertise.
+
+## How AI Has Traditionally Been Integrated into Software
+
+Understanding how classification and recognition models have been integrated into traditional software is crucial for appreciating how different AI agents are.
+
+### The API Call Pattern
+
+Historically, AI has been treated as a **black box service** within larger software systems. The pattern looks like this:
+
+```
+Software: "Here's some data. What category is it?"
+AI Model: "Category B, 87% confidence."
+Software: "Thank you. I'll proceed accordingly."
+```
+
+The AI component is essentially a sophisticated function call. You send data in, you get a label (and maybe a confidence score) back. The software remains firmly in control of the decision-making.
+
+### Examples in Practice
+
+**Email spam filtering:**
+```
+Email arrives → Extract features (sender, content, links, etc.)
+             → Send to spam classifier
+             → Receive: "spam" (95% confidence)
+             → Move to spam folder
+```
+
+The email client makes all the decisions. The AI model just provides one piece of information (spam probability) that the client uses in its predetermined workflow.
+
+**Document processing:**
+```
+Upload receipt image → Send to OCR service
+                     → Receive: Extracted text
+                     → Parse text with regular expressions
+                     → Extract total amount
+                     → Store in database
+```
+
+The OCR is just one step in a traditional, deterministic pipeline. The application logic controls the entire flow.
+
+**Content moderation:**
+```
+User submits comment → Send to toxicity classifier
+                     → Receive: "toxic" (72% confidence)
+                     → If confidence > 80%: Auto-reject
+                     → Else if confidence > 50%: Queue for human review
+                     → Else: Auto-approve
+```
+
+Notice how the software defines exact thresholds and workflows. The AI provides a score; the software decides what to do with it.
+
+### The Software Stays "Normal"
+
+This integration pattern has a crucial property: **the software remains deterministic, predictable, and in control**.
+
+The AI component might use neural networks and complex mathematics internally, but from the software's perspective, it's just a function that returns a value. You can write traditional unit tests, set up monitoring, handle errors in familiar ways, and reason about the system's behavior using standard software engineering practices.
+
+The AI is a tool the software uses, not a partner that makes decisions.
+
+### The Limitations of This Pattern
+
+This approach has served us well for many applications, but it has fundamental limitations:
+
+1. **Fixed categories**: You can only get answers to questions you anticipated during training
+2. **No reasoning**: The model can't think through multi-step problems or adapt its approach
+3. **No generation**: These models recognize and classify; they don't create
+4. **No context accumulation**: Each API call is independent; the model doesn't remember previous interactions
+5. **Software brittleness**: Every possible scenario must be anticipated and coded
+
+If you want the system to do something new, you need to either:
+- Retrain or fine-tune the model with new categories
+- Write new code to handle the new workflow
+- Or both
+
+The system cannot adapt on its own. It cannot handle novel situations it wasn't explicitly programmed for.
+
+## The Foundation We've Built
+
+The AI you already know—the classification models and recognition systems—represents the first generation of production AI. These systems are narrow, specialized, and require explicit programming for every behavior.
+
+They've been immensely valuable:
+- They've automated tasks that were previously impossible to automate at scale
+- They've provided capabilities (like image recognition) that traditional algorithms couldn't approach
+- They've been deployed successfully in countless applications
+- They've established patterns and best practices for AI integration
+
+But they've also been fundamentally limited by their nature. They're tools that software uses, not collaborators that reason and decide.
+
+This is the baseline. This is what AI looked like before generative models and agents entered the picture. As we'll see in the next chapter, the shift from classification to generation isn't just an incremental improvement—it's a fundamental change in what AI systems can do and how we work with them.
+
+Before we move on, internalize this contrast:
+
+**Traditional AI**: Software asks, "What category is this?" AI answers. Software decides what to do next.
+
+**The coming shift**: You'll describe a goal. The AI will figure out how to achieve it, what tools to use, and what steps to take. The AI becomes the decision-maker.
+
+That shift changes everything. And it starts with understanding what generative models actually are.

@@ -1,0 +1,624 @@
+# Tools and the Model Context Protocol {#sec-tools-mcp}
+
+*Designing the capabilities you give to agents*
+
+Tools are how agents interact with the world. They're the agent's hands, eyes, and voice—the mechanisms through which reasoning becomes action. But not all tools are created equal. A well-designed tool makes the agent more capable, more reliable, and easier to debug. A poorly designed tool creates confusion, errors, and frustration.
+
+This chapter explores the art and science of tool design, introduces the Model Context Protocol (MCP)—the emerging standard for agent tools—and provides practical guidance for building your own tools.
+
+## Tool Design Is API Design (With a Twist)
+
+If you've designed APIs before, tool design will feel familiar. You're defining interfaces: what functions are available, what parameters they accept, what they return. The principles of good API design apply: clarity, consistency, appropriate granularity.
+
+But there's a crucial difference: **Your consumer is an AI model, not a human programmer.**
+
+### What This Changes
+
+**Human programmers:**
+- Read documentation thoroughly
+- Understand context and conventions
+- Remember previous experiences with similar APIs
+- Can ask clarifying questions
+- Learn from examples and iterate
+
+**AI agents:**
+- Have only what's in the tool description
+- Interpret descriptions probabilistically
+- Don't "learn" from previous sessions (unless in context)
+- Can't ask clarifying questions (they must decide based on available information)
+- May misinterpret ambiguous descriptions
+
+This means tool design for agents requires extra precision and clarity.
+
+### The Core Elements of Tool Design
+
+Every tool needs:
+
+**1. Name**
+Clear, descriptive, unambiguous. The name should immediately convey what the tool does.
+
+Good: `send_email`, `query_customer_database`, `calculate_distance`
+Bad: `do_thing`, `helper`, `util_5`
+
+**2. Description**
+This is critical. The description must:
+- Explain what the tool does
+- Clarify when to use it (and when not to)
+- Highlight any important limitations or requirements
+- Be concise but complete
+
+Good:
+```
+"Sends an email to a specified recipient with a subject and body.
+Use this when you need to communicate with users or stakeholders
+via email. Requires a valid email address. Returns confirmation
+when sent successfully."
+```
+
+Bad:
+```
+"Sends email"
+```
+
+**3. Parameters**
+Each parameter needs:
+- A clear name
+- A type (string, number, boolean, array, object)
+- A description explaining what it is and what format is expected
+- Indication of whether it's required or optional
+- Default values for optional parameters (if applicable)
+
+Good:
+```json
+{
+  "customer_id": {
+    "type": "string",
+    "required": true,
+    "description": "The unique identifier for the customer,
+                    typically in format CUST-XXXXX"
+  },
+  "include_history": {
+    "type": "boolean",
+    "required": false,
+    "default": false,
+    "description": "Whether to include full order history.
+                    Set to true for detailed analysis, false
+                    for quick lookups"
+  }
+}
+```
+
+Bad:
+```json
+{
+  "id": {"type": "string"},
+  "flag": {"type": "boolean"}
+}
+```
+
+**4. Return Value**
+Describe what the tool returns:
+- The structure of the response
+- What the agent should expect
+- How to interpret the results
+- What to do if there's an error
+
+Good:
+```
+"Returns a customer object with fields: id, name, email, status,
+lifetime_value. If customer not found, returns {found: false}.
+If database error, returns {error: true, message: '...'}"
+```
+
+Bad:
+```
+"Returns customer data or error"
+```
+
+### The Twist: Context Window Considerations
+
+Here's a constraint that doesn't exist in traditional API design: **Return values consume the agent's context window.**
+
+If your tool returns 50KB of data, that's 50KB less space for conversation history, other tool results, and the agent's reasoning.
+
+**Design implications:**
+
+**Be concise:** Return only what's needed
+- Don't include: Every field from the database
+- Do include: Fields relevant to the likely use cases
+
+**Support filtering:** Let the agent request specific data
+```
+query_database(customer_id, fields=["name", "email", "status"])
+```
+Rather than always returning everything.
+
+**Summarize when appropriate:** For large datasets
+- Don't return: All 10,000 rows
+- Do return: Summary statistics + sample rows, or paginated results
+
+**Structure clearly:** Use JSON or structured formats
+- Makes it easier for the agent to parse
+- More token-efficient than prose
+
+This is unique to agent tool design and can have significant impact on agent performance and cost.
+
+## The Model Context Protocol (MCP)
+
+As agent harnesses proliferated, a problem emerged: Every harness had its own tool format. A tool built for Claude Code wouldn't work with Cursor. A tool for one system had to be rewritten for another.
+
+The **Model Context Protocol (MCP)** solves this by providing a standardized interface for agent tools—"the USB standard" for agent capabilities.
+
+### What MCP Is
+
+MCP is an open protocol developed by Anthropic that defines:
+
+1. **How tools are described** (standard schema)
+2. **How tools are called** (standard invocation format)
+3. **How tools return results** (standard response format)
+4. **How resources are exposed** (files, databases, etc.)
+5. **How prompts and context are managed**
+
+Think of it like HTTP for AI agents. Just as web servers and browsers speak HTTP regardless of their implementation, MCP-compatible tools and harnesses can work together regardless of their specific technologies.
+
+### The Architecture
+
+**MCP Servers** expose capabilities:
+```
+[Your Tool/Service] → [MCP Server] → [MCP Protocol]
+```
+
+**MCP Clients** (agent harnesses) consume capabilities:
+```
+[Agent Harness] → [MCP Protocol] → [MCP Server] → [Tool/Service]
+```
+
+You build an MCP server once. Any MCP-compatible agent harness can use it.
+
+### What This Enables
+
+**Build once, use everywhere:**
+Write an MCP server for your CRM. Now it works with:
+- Claude Code
+- Any other MCP-compatible harness
+- Future tools that support MCP
+
+**Ecosystem development:**
+The community can build reusable MCP servers:
+- GitHub integration
+- Google Drive access
+- Database connectors
+- Slack/Teams interfaces
+- Custom business systems
+
+**Easier adoption:**
+Teams can use existing MCP servers rather than building everything custom.
+
+**Standardized patterns:**
+Best practices and patterns emerge and spread through the ecosystem.
+
+### MCP Server Components
+
+An MCP server can expose:
+
+**1. Tools**
+Functions the agent can call (what we've been discussing).
+
+**2. Resources**
+Things the agent can read (files, database schemas, documentation).
+Example: An MCP server might expose your API documentation as a resource the agent can reference.
+
+**3. Prompts**
+Pre-written prompt templates for common tasks.
+Example: "Analyze customer churn" prompt that includes relevant context and instructions.
+
+**4. Sampling**
+Ability for the server to request LLM completions (advanced use case).
+
+### MCP in Practice
+
+**Using an existing MCP server:**
+
+```bash
+# Install an MCP server (example)
+npm install -g @modelcontextprotocol/server-github
+
+# Configure your agent harness to use it
+# (configuration varies by harness, but typically via config file)
+{
+  "mcpServers": {
+    "github": {
+      "command": "mcp-server-github",
+      "args": ["--token", "your_github_token"]
+    }
+  }
+}
+```
+
+Now your agent has GitHub tools: create issues, read repos, manage PRs, etc.
+
+**Building a simple MCP server:**
+
+```python
+from mcp.server import Server
+from mcp.types import Tool, TextContent
+
+app = Server("my-company-crm")
+
+@app.tool()
+async def get_customer(customer_id: str) -> str:
+    """Retrieves customer information from CRM
+
+    Args:
+        customer_id: The unique customer identifier
+    """
+    # Your implementation
+    customer = await crm_api.get_customer(customer_id)
+    return json.dumps(customer)
+
+@app.tool()
+async def create_ticket(
+    customer_id: str,
+    subject: str,
+    description: str
+) -> str:
+    """Creates a support ticket
+
+    Args:
+        customer_id: The customer the ticket is for
+        subject: Brief summary of the issue
+        description: Detailed description
+    """
+    ticket = await crm_api.create_ticket(
+        customer_id, subject, description
+    )
+    return json.dumps(ticket)
+
+# Run the server
+app.run()
+```
+
+The MCP framework handles:
+- Exposing tools with descriptions
+- Parameter validation
+- Protocol communication
+- Error handling
+
+You just implement the business logic.
+
+## Common MCP Servers and Patterns
+
+Let's explore some common MCP server types you might use or build.
+
+### Filesystem Access
+
+**What it does:**
+Provides read/write access to files and directories.
+
+**Tools typically included:**
+- `read_file(path)` - Read file contents
+- `write_file(path, content)` - Write or overwrite file
+- `list_directory(path)` - List files in directory
+- `search_files(pattern)` - Find files matching pattern
+
+**Use cases:**
+- Reading configuration files
+- Processing data files
+- Generating reports
+- Managing documentation
+
+**Security considerations:**
+- Restrict to specific directories
+- Read-only vs. read-write permissions
+- File type restrictions
+
+### Database Connectors
+
+**What it does:**
+Executes queries and retrieves data from databases.
+
+**Tools typically included:**
+- `query(sql)` - Execute SELECT query
+- `get_schema()` - Retrieve database schema
+- `describe_table(table_name)` - Get table structure
+
+**Use cases:**
+- Data analysis
+- Report generation
+- Answering business questions from data
+
+**Security considerations:**
+- Read-only access (no UPDATE, DELETE, DROP)
+- Query timeouts
+- Result size limits
+- No access to sensitive tables
+
+### API Wrappers
+
+**What it does:**
+Wraps external service APIs in agent-friendly tools.
+
+**Examples:**
+- **Slack:** Send messages, read channels, manage users
+- **Google Drive:** Read files, create documents, share resources
+- **Salesforce:** Query CRM data, create leads, update opportunities
+- **Stripe:** Check payment status, retrieve customer info
+
+**Tools vary by service** but typically include:
+- Data retrieval functions
+- Action functions (send, create, update)
+- Search/query functions
+
+**Use cases:**
+- Automating workflows across services
+- Integrating multiple platforms
+- Accessing external data sources
+
+### Custom Business Logic
+
+**What it does:**
+Encapsulates your specific business operations.
+
+**Examples:**
+- `calculate_pricing(product, quantity, customer_segment)` - Apply complex pricing rules
+- `check_inventory_availability(sku, quantity, location)` - Multi-source inventory check
+- `approve_expense(expense_id, approver_id)` - Workflow with business rules
+- `generate_compliance_report(department, date_range)` - Domain-specific reporting
+
+**Use cases:**
+- Applying complex business rules agents shouldn't replicate
+- Operations requiring multiple system interactions
+- Enforcing compliance and policies
+- Domain-specific calculations
+
+## Building Your Own MCP Servers
+
+Let's walk through the considerations for building custom MCP servers.
+
+### When to Build vs. Use Existing
+
+**Use existing MCP servers when:**
+- A server already exists for your service (GitHub, Slack, databases)
+- The existing server meets your needs
+- You're prototyping and want to move fast
+
+**Build custom when:**
+- No existing server for your system
+- You need specific business logic
+- You require custom security/access patterns
+- You're wrapping proprietary internal systems
+
+### Design Process
+
+**1. Identify the capabilities needed**
+What operations do agents need to perform in your domain?
+
+Example (HR system):
+- Check PTO balances
+- Request time off (for users)
+- Approve time off (for managers)
+- View org chart
+- Look up employee information
+
+**2. Design the tool interface**
+For each operation, define:
+- Tool name
+- Description (clear and detailed)
+- Parameters (with types and descriptions)
+- Return value structure
+- Error cases
+
+**3. Consider security and permissions**
+- What should agents be able to do?
+- What should require human approval?
+- How will you authenticate/authorize?
+- What should be logged?
+
+**4. Implement the tools**
+Write the code that:
+- Validates parameters
+- Calls your actual systems
+- Handles errors gracefully
+- Returns structured results
+- Logs operations
+
+**5. Test thoroughly**
+- Unit tests for each tool
+- Integration tests with real systems
+- Test with actual agents (does the agent use tools correctly?)
+- Error case testing
+
+### Basic Architecture Example
+
+```python
+# MCP Server for company HR system
+from mcp.server import Server
+import logging
+
+app = Server("company-hr")
+
+# Configure logging
+logger = logging.getLogger("hr-mcp")
+
+@app.tool()
+async def get_pto_balance(employee_id: str) -> str:
+    """Get PTO balance for an employee
+
+    Retrieves current PTO balance including accrued time,
+    used time, and pending requests.
+
+    Args:
+        employee_id: Employee identifier (format: EMP-XXXXX)
+
+    Returns:
+        JSON object with balance_days, used_days, pending_days
+    """
+    try:
+        # Log the request
+        logger.info(f"PTO balance requested for {employee_id}")
+
+        # Validate employee ID format
+        if not employee_id.startswith("EMP-"):
+            return json.dumps({
+                "error": "Invalid employee ID format",
+                "valid_format": "EMP-XXXXX"
+            })
+
+        # Call actual HR system
+        response = await hr_api.get_pto_balance(employee_id)
+
+        # Return structured result
+        return json.dumps({
+            "employee_id": employee_id,
+            "balance_days": response.balance,
+            "used_days": response.used,
+            "pending_days": response.pending,
+            "accrual_rate": response.accrual_rate
+        })
+
+    except EmployeeNotFoundError:
+        return json.dumps({
+            "error": "Employee not found",
+            "employee_id": employee_id
+        })
+    except Exception as e:
+        logger.error(f"Error getting PTO balance: {e}")
+        return json.dumps({
+            "error": "System error retrieving PTO data"
+        })
+
+@app.tool()
+async def get_manager(employee_id: str) -> str:
+    """Get an employee's manager
+
+    Returns information about an employee's direct manager
+    including name, email, and employee ID.
+
+    Args:
+        employee_id: Employee identifier (format: EMP-XXXXX)
+
+    Returns:
+        JSON object with manager details
+    """
+    # Implementation...
+    pass
+
+# Additional tools...
+
+if __name__ == "__main__":
+    app.run()
+```
+
+### Testing and Debugging MCP Servers
+
+**Standalone testing:**
+```python
+# Test individual tool functions
+result = await get_pto_balance("EMP-12345")
+print(result)
+# Verify format, error handling, edge cases
+```
+
+**MCP protocol testing:**
+Most MCP implementations provide testing utilities:
+```bash
+# Start server in test mode
+mcp-server-hr --test
+
+# Send test requests
+curl http://localhost:8080/test/tool/get_pto_balance \
+  -d '{"employee_id": "EMP-12345"}'
+```
+
+**Agent testing:**
+The real test: Does an agent use your tools correctly?
+- Connect your MCP server to an agent harness
+- Give the agent tasks that require your tools
+- Observe whether it chooses the right tools
+- Check if it interprets results correctly
+- Verify error handling
+
+**Common issues to watch for:**
+- Ambiguous tool descriptions (agent uses wrong tool)
+- Missing parameter descriptions (agent passes incorrect values)
+- Unclear return formats (agent misinterprets results)
+- Inadequate error messages (agent gets confused by failures)
+
+## What Good Tool Design Is and Is Not
+
+Let's crystallize the principles:
+
+### What Good Tool Design Is
+
+**Clear contracts that help the agent make good decisions**
+
+Tools with:
+- Descriptive names that convey purpose
+- Detailed descriptions including when to use (and when not to)
+- Well-documented parameters with types and examples
+- Structured, predictable return values
+- Helpful error messages
+
+**Appropriately scoped**
+
+Each tool should:
+- Do one thing well
+- Have a clear, single purpose
+- Not combine unrelated operations
+- Be neither too granular nor too broad
+
+**Agent-friendly**
+
+Tools that:
+- Return concise, relevant information
+- Use consistent naming and patterns
+- Provide context in responses
+- Handle errors gracefully with clear explanations
+
+**Safe and auditable**
+
+Tools that:
+- Log operations for review
+- Enforce permissions appropriately
+- Validate inputs
+- Fail safely (don't partially complete dangerous operations)
+
+### What Good Tool Design Is Not
+
+**Trying to constrain the agent's reasoning through tool design**
+
+Don't try to force the agent down a specific path by only providing certain tools. The agent should have the capabilities it needs; you guide behavior through instructions, not tool limitation.
+
+Bad: Only providing tools that match one specific workflow
+Good: Providing comprehensive tools, then instructing the agent on appropriate usage
+
+**Over-engineering for hypothetical use cases**
+
+Don't build 50 parameters "just in case." Start with what's needed. You can always add capabilities later.
+
+**Assuming the agent will "figure it out"**
+
+The agent is smart, but it's not psychic. Clarity beats cleverness. Don't rely on the agent inferring what you meant—be explicit.
+
+**Optimizing for human developers at the expense of clarity for AI**
+
+Traditional APIs might use terse names to save typing. Agent tools should prioritize clarity.
+
+Human API: `getUser(id)`
+Agent tool: `get_customer_information(customer_id)` with detailed description
+
+## Bringing It All Together
+
+Tools are the interface between the agent's reasoning and your systems. Good tool design:
+
+1. Makes agents more capable (they can accomplish more)
+2. Makes agents more reliable (clear tools = fewer mistakes)
+3. Makes agents more debuggable (good error messages help you understand issues)
+4. Makes your systems safer (controlled access points)
+5. Makes development faster (MCP enables reuse)
+
+The Model Context Protocol provides a standard that makes tool development more valuable—build once, use across harnesses and agents.
+
+In the next chapter, we'll explore another critical skill: instructing agents effectively. Tools give agents capabilities, but instructions give them direction. How you communicate goals, constraints, and expectations dramatically affects agent performance.
+
+Great tools enable great agents. Great instructions guide them to success.

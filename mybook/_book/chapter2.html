@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2&nbsp; The Generative Revolution – AI Agents for the IT Professional</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./intro.html" rel="next">
+<link href="./chapter1.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-27c261d06b905028a18691de25d09dde.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./chapter1.html">Part I: Foundations — Understanding the AI Landscape</a></li><li class="breadcrumb-item"><a href="./chapter2.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">The Generative Revolution</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">AI Agents for the IT Professional</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Foundations — Understanding the AI Landscape</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./chapter1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The AI You Already Know</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./chapter2.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">The Generative Revolution</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Summary</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#what-generative-models-actually-do" id="toc-what-generative-models-actually-do" class="nav-link active" data-scroll-target="#what-generative-models-actually-do"><span class="header-section-number">2.1</span> What Generative Models Actually Do</a>
+  <ul class="collapse">
+  <li><a href="#the-core-insight" id="toc-the-core-insight" class="nav-link" data-scroll-target="#the-core-insight"><span class="header-section-number">2.1.1</span> The Core Insight</a></li>
+  <li><a href="#diffusion-models-creating-images-from-noise" id="toc-diffusion-models-creating-images-from-noise" class="nav-link" data-scroll-target="#diffusion-models-creating-images-from-noise"><span class="header-section-number">2.1.2</span> Diffusion Models: Creating Images from Noise</a></li>
+  <li><a href="#llms-generating-text-one-token-at-a-time" id="toc-llms-generating-text-one-token-at-a-time" class="nav-link" data-scroll-target="#llms-generating-text-one-token-at-a-time"><span class="header-section-number">2.1.3</span> LLMs: Generating Text One Token at a Time</a></li>
+  <li><a href="#the-implications-of-generation" id="toc-the-implications-of-generation" class="nav-link" data-scroll-target="#the-implications-of-generation"><span class="header-section-number">2.1.4</span> The Implications of Generation</a></li>
+  </ul></li>
+  <li><a href="#how-llms-are-trained" id="toc-how-llms-are-trained" class="nav-link" data-scroll-target="#how-llms-are-trained"><span class="header-section-number">2.2</span> How LLMs Are Trained</a>
+  <ul class="collapse">
+  <li><a href="#pretraining-learning-language" id="toc-pretraining-learning-language" class="nav-link" data-scroll-target="#pretraining-learning-language"><span class="header-section-number">2.2.1</span> Pretraining: Learning Language</a></li>
+  <li><a href="#fine-tuning-following-instructions" id="toc-fine-tuning-following-instructions" class="nav-link" data-scroll-target="#fine-tuning-following-instructions"><span class="header-section-number">2.2.2</span> Fine-Tuning: Following Instructions</a></li>
+  <li><a href="#rlhf-learning-from-human-feedback" id="toc-rlhf-learning-from-human-feedback" class="nav-link" data-scroll-target="#rlhf-learning-from-human-feedback"><span class="header-section-number">2.2.3</span> RLHF: Learning from Human Feedback</a></li>
+  <li><a href="#why-this-training-matters-to-you" id="toc-why-this-training-matters-to-you" class="nav-link" data-scroll-target="#why-this-training-matters-to-you"><span class="header-section-number">2.2.4</span> Why This Training Matters to You</a></li>
+  </ul></li>
+  <li><a href="#the-context-window-an-llms-working-memory" id="toc-the-context-window-an-llms-working-memory" class="nav-link" data-scroll-target="#the-context-window-an-llms-working-memory"><span class="header-section-number">2.3</span> The Context Window: An LLM’s Working Memory</a>
+  <ul class="collapse">
+  <li><a href="#what-tokens-are" id="toc-what-tokens-are" class="nav-link" data-scroll-target="#what-tokens-are"><span class="header-section-number">2.3.1</span> What Tokens Are</a></li>
+  <li><a href="#context-window-size" id="toc-context-window-size" class="nav-link" data-scroll-target="#context-window-size"><span class="header-section-number">2.3.2</span> Context Window Size</a></li>
+  <li><a href="#what-fits-in-context" id="toc-what-fits-in-context" class="nav-link" data-scroll-target="#what-fits-in-context"><span class="header-section-number">2.3.3</span> What Fits in Context</a></li>
+  <li><a href="#what-this-is-and-isnt" id="toc-what-this-is-and-isnt" class="nav-link" data-scroll-target="#what-this-is-and-isnt"><span class="header-section-number">2.3.4</span> What This Is and Isn’t</a></li>
+  <li><a href="#implications-for-working-with-llms" id="toc-implications-for-working-with-llms" class="nav-link" data-scroll-target="#implications-for-working-with-llms"><span class="header-section-number">2.3.5</span> Implications for Working with LLMs</a></li>
+  </ul></li>
+  <li><a href="#system-prompts-vs.-user-prompts" id="toc-system-prompts-vs.-user-prompts" class="nav-link" data-scroll-target="#system-prompts-vs.-user-prompts"><span class="header-section-number">2.4</span> System Prompts vs.&nbsp;User Prompts</a>
+  <ul class="collapse">
+  <li><a href="#system-prompt-the-job-description" id="toc-system-prompt-the-job-description" class="nav-link" data-scroll-target="#system-prompt-the-job-description"><span class="header-section-number">2.4.1</span> System Prompt: The Job Description</a></li>
+  <li><a href="#user-prompt-the-work-request" id="toc-user-prompt-the-work-request" class="nav-link" data-scroll-target="#user-prompt-the-work-request"><span class="header-section-number">2.4.2</span> User Prompt: The Work Request</a></li>
+  <li><a href="#how-they-interact" id="toc-how-they-interact" class="nav-link" data-scroll-target="#how-they-interact"><span class="header-section-number">2.4.3</span> How They Interact</a></li>
+  <li><a href="#practical-examples" id="toc-practical-examples" class="nav-link" data-scroll-target="#practical-examples"><span class="header-section-number">2.4.4</span> Practical Examples</a></li>
+  <li><a href="#what-these-are-and-are-not" id="toc-what-these-are-and-are-not" class="nav-link" data-scroll-target="#what-these-are-and-are-not"><span class="header-section-number">2.4.5</span> What These Are and Are Not</a></li>
+  <li><a href="#the-interaction-pattern" id="toc-the-interaction-pattern" class="nav-link" data-scroll-target="#the-interaction-pattern"><span class="header-section-number">2.4.6</span> The Interaction Pattern</a></li>
+  </ul></li>
+  <li><a href="#the-revolution-summarized" id="toc-the-revolution-summarized" class="nav-link" data-scroll-target="#the-revolution-summarized"><span class="header-section-number">2.5</span> The Revolution Summarized</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./chapter1.html">Part I: Foundations — Understanding the AI Landscape</a></li><li class="breadcrumb-item"><a href="./chapter2.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">The Generative Revolution</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-generative-revolution" class="quarto-section-identifier"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">The Generative Revolution</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><em>Understanding what makes modern AI different</em></p>
+<p>In 2022, something changed. Suddenly, everyone was talking about AI again—not just in tech circles, but at dinner tables, in boardrooms, and on the news. DALL-E created images from text descriptions. ChatGPT wrote essays, debugged code, and held conversations that felt surprisingly human. Within months, generative AI went from a research curiosity to a cultural phenomenon.</p>
+<p>But what actually changed? Why are these new AI systems fundamentally different from the classification and recognition models we explored in Chapter 1?</p>
+<p>The answer lies in a deceptively simple shift: from <strong>recognition</strong> to <strong>generation</strong>. Instead of mapping inputs to predefined categories, these models create new content. And that capability unlocks possibilities that classification-based AI could never approach.</p>
+<section id="what-generative-models-actually-do" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="what-generative-models-actually-do"><span class="header-section-number">2.1</span> What Generative Models Actually Do</h2>
+<p>At the heart of generative AI is a profound insight: <strong>prediction and generation are the same thing</strong>.</p>
+<section id="the-core-insight" class="level3" data-number="2.1.1">
+<h3 data-number="2.1.1" class="anchored" data-anchor-id="the-core-insight"><span class="header-section-number">2.1.1</span> The Core Insight</h3>
+<p>Traditional classification asks: “Which category does this belong to?”</p>
+<p>Generative models ask: “What comes next?”</p>
+<p>That subtle reframing changes everything.</p>
+</section>
+<section id="diffusion-models-creating-images-from-noise" class="level3" data-number="2.1.2">
+<h3 data-number="2.1.2" class="anchored" data-anchor-id="diffusion-models-creating-images-from-noise"><span class="header-section-number">2.1.2</span> Diffusion Models: Creating Images from Noise</h3>
+<p>Consider how modern image generation works. Models like Stable Diffusion or DALL-E 2 don’t have a database of images they’re retrieving. They’re not copy-pasting parts of training images together. Instead, they learned a very specific skill: <strong>removing noise</strong>.</p>
+<p>Here’s the process:</p>
+<ol type="1">
+<li>During training, the model saw millions of images</li>
+<li>For each image, random noise was progressively added until the image became pure static</li>
+<li>The model learned to reverse this process—to predict what the image looked like before noise was added</li>
+<li>After training, you give it pure noise plus a text description</li>
+<li>The model iteratively removes noise, guided by the description, until a coherent image emerges</li>
+</ol>
+<p>At each step, the model is predicting: “Given this noisy image and this description, what should the slightly less noisy version look like?” Generation happens through repeated prediction.</p>
+<p>The result is genuinely new images. The model hasn’t seen a photo of “an astronaut riding a horse on Mars” during training, but it learned the visual patterns of astronauts, horses, and Martian landscapes. It can combine these learned patterns in novel ways.</p>
+<p><strong>What this is:</strong> A model that creates new content by learning and combining patterns from training data.</p>
+<p><strong>What this is not:</strong> A database that retrieves or copies stored images. The model generates pixel by pixel through learned transformations.</p>
+</section>
+<section id="llms-generating-text-one-token-at-a-time" class="level3" data-number="2.1.3">
+<h3 data-number="2.1.3" class="anchored" data-anchor-id="llms-generating-text-one-token-at-a-time"><span class="header-section-number">2.1.3</span> LLMs: Generating Text One Token at a Time</h3>
+<p>Large Language Models (LLMs) like GPT-4, Claude, or Gemini work on the same principle, applied to text.</p>
+<p>A <strong>token</strong> is roughly ¾ of a word (we’ll explore this more in the next section). When you ask ChatGPT a question, here’s what actually happens:</p>
+<ol type="1">
+<li>Your question is converted into tokens</li>
+<li>The model predicts the most likely next token</li>
+<li>That token is added to the context</li>
+<li>The model predicts the next token after that</li>
+<li>This continues until the model predicts a “stop” token</li>
+</ol>
+<p>Each prediction is based on everything that came before. The model asks itself: “Given this entire conversation so far, what token should come next?”</p>
+<p>Consider this example:</p>
+<p><strong>Your prompt:</strong> “Explain photosynthesis in simple terms.”</p>
+<p><strong>The model generates:</strong> - “Photosynthesis” (predicted as a good starting token) - ” is” (predicted to follow “Photosynthesis”) - ” the” (predicted to follow “Photosynthesis is”) - ” process” (predicted to follow “Photosynthesis is the”) - …and so on, one token at a time</p>
+<p>Each token is a prediction based on patterns learned from vast amounts of text during training. The model learned that after “Photosynthesis is the,” words like “process,” “way,” or “method” are highly probable. It learned that explanations about scientific concepts often follow certain structural patterns.</p>
+<p>The model is generating original text, not retrieving stored answers. It doesn’t have a pre-written explanation of photosynthesis in a database. It’s composing the explanation token by token, using learned linguistic and conceptual patterns.</p>
+<p><strong>What this is:</strong> A model that generates text by predicting probable next tokens based on learned patterns.</p>
+<p><strong>What this is not:</strong> A database that stores and retrieves facts. The model doesn’t “look up” information—it generates responses based on statistical patterns in its training data.</p>
+</section>
+<section id="the-implications-of-generation" class="level3" data-number="2.1.4">
+<h3 data-number="2.1.4" class="anchored" data-anchor-id="the-implications-of-generation"><span class="header-section-number">2.1.4</span> The Implications of Generation</h3>
+<p>This shift from recognition to generation has profound implications:</p>
+<ol type="1">
+<li><p><strong>Creativity within learned patterns:</strong> The model can produce content it has never seen, as long as it’s a plausible combination of patterns it has learned.</p></li>
+<li><p><strong>Flexibility:</strong> Instead of being limited to predefined categories, the model can generate responses to arbitrary prompts.</p></li>
+<li><p><strong>Unpredictability:</strong> Because generation involves probabilistic predictions, the same input can produce different outputs (though this can be controlled with temperature and other parameters).</p></li>
+<li><p><strong>No ground truth:</strong> Unlike classification, where you can check if “this is a cat” is correct, generated content exists on a spectrum from “good” to “bad” to “wrong,” often with subjective judgment involved.</p></li>
+<li><p><strong>Hallucination:</strong> Because the model generates based on patterns rather than retrieving facts, it can confidently generate plausible-sounding but entirely false information.</p></li>
+</ol>
+<p>These characteristics make generative models powerful and versatile—but also fundamentally different to work with than classification models.</p>
+</section>
+</section>
+<section id="how-llms-are-trained" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="how-llms-are-trained"><span class="header-section-number">2.2</span> How LLMs Are Trained</h2>
+<p>Understanding how these models are trained helps you understand both their capabilities and their limitations. LLM training typically happens in multiple stages, each serving a different purpose.</p>
+<section id="pretraining-learning-language" class="level3" data-number="2.2.1">
+<h3 data-number="2.2.1" class="anchored" data-anchor-id="pretraining-learning-language"><span class="header-section-number">2.2.1</span> Pretraining: Learning Language</h3>
+<p>The first and most expensive stage is <strong>pretraining</strong>. This is where the model learns language itself.</p>
+<p><strong>The process:</strong> 1. Gather an enormous corpus of text (books, websites, articles, code, conversations) 2. For each sequence of tokens, train the model to predict the next token 3. Repeat billions of times across the entire corpus 4. Adjust the model’s parameters (billions of them) to get better at prediction</p>
+<p>This is unsupervised learning—the model doesn’t need labeled data. The text itself provides the labels: given tokens 1 through N, predict token N+1.</p>
+<p>Through this process, the model learns: - Grammar and syntax (“The cat sat on the” → “mat” is more likely than “elephant”) - Factual associations (“The capital of France is” → “Paris”) - Common reasoning patterns (cause-effect relationships, logical progressions) - Domain knowledge (medical terminology, programming concepts, historical events) - Cultural references and context</p>
+<p><strong>What pretraining produces:</strong> A model that’s very good at predicting plausible text continuations but not necessarily good at following instructions or being helpful.</p>
+<p>A pretrained model might complete “How do I bake a cake?” with “is a question many people ask” rather than actually providing instructions. It’s predicting likely text continuations, not trying to be a helpful assistant.</p>
+</section>
+<section id="fine-tuning-following-instructions" class="level3" data-number="2.2.2">
+<h3 data-number="2.2.2" class="anchored" data-anchor-id="fine-tuning-following-instructions"><span class="header-section-number">2.2.2</span> Fine-Tuning: Following Instructions</h3>
+<p>The next stage is <strong>fine-tuning</strong> (also called supervised fine-tuning or SFT). This is where the model learns to be an assistant.</p>
+<p><strong>The process:</strong> 1. Create a dataset of (instruction, desired response) pairs - Question: “Explain gravity” → Response: [Good explanation] - Request: “Write a poem about trees” → Response: [Actual poem] - Task: “Debug this code” → Response: [Helpful debugging steps] 2. Train the model on these examples 3. The model learns the pattern: “When given an instruction, generate a helpful response”</p>
+<p>After fine-tuning, “How do I bake a cake?” gets a recipe instead of meta-commentary about the question.</p>
+<p>Fine-tuning typically uses far less data than pretraining (thousands to hundreds of thousands of examples vs.&nbsp;billions of text sequences). It’s not teaching the model new knowledge—it’s teaching the model how to format and present the knowledge it already has.</p>
+</section>
+<section id="rlhf-learning-from-human-feedback" class="level3" data-number="2.2.3">
+<h3 data-number="2.2.3" class="anchored" data-anchor-id="rlhf-learning-from-human-feedback"><span class="header-section-number">2.2.3</span> RLHF: Learning from Human Feedback</h3>
+<p>The final stage is <strong>Reinforcement Learning from Human Feedback</strong> (RLHF). This is where the model learns human preferences about quality, tone, and safety.</p>
+<p><strong>The process:</strong> 1. Generate multiple responses to the same prompt 2. Human raters rank these responses (best to worst) 3. Train a “reward model” to predict human preferences 4. Use reinforcement learning to adjust the model to produce responses that score higher according to the reward model</p>
+<p>This is how models learn: - To refuse harmful requests - To be concise when appropriate and detailed when needed - To admit uncertainty rather than confidently hallucinating - To be helpful without being sycophantic - To follow nuanced human preferences that are hard to specify explicitly</p>
+<p>RLHF is what makes the difference between a model that can generate text and an assistant that’s actually pleasant and safe to interact with.</p>
+</section>
+<section id="why-this-training-matters-to-you" class="level3" data-number="2.2.4">
+<h3 data-number="2.2.4" class="anchored" data-anchor-id="why-this-training-matters-to-you"><span class="header-section-number">2.2.4</span> Why This Training Matters to You</h3>
+<p>Understanding this training pipeline helps you understand:</p>
+<ol type="1">
+<li><p><strong>Knowledge cutoff:</strong> The model only knows training data up to a certain date. It can’t know about events that happened after training.</p></li>
+<li><p><strong>Patterns, not facts:</strong> The model learned statistical associations. It might “know” that Paris is the capital of France because that pattern appeared thousands of times in training, but it doesn’t have a structured database of facts.</p></li>
+<li><p><strong>Confidence without correctness:</strong> The model generates plausible text based on patterns. It can be very confident about completely wrong information if the wrong information follows plausible patterns.</p></li>
+<li><p><strong>Instruction-following capability:</strong> The model can follow complex instructions because it was explicitly trained to do so, not because language models inherently understand commands.</p></li>
+<li><p><strong>Limitations:</strong> If a capability wasn’t in the training data or wasn’t reinforced during fine-tuning and RLHF, the model probably won’t have it.</p></li>
+</ol>
+</section>
+</section>
+<section id="the-context-window-an-llms-working-memory" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="the-context-window-an-llms-working-memory"><span class="header-section-number">2.3</span> The Context Window: An LLM’s Working Memory</h2>
+<p>One of the most important concepts for understanding and working with LLMs is the <strong>context window</strong>—the model’s working memory for any given interaction.</p>
+<section id="what-tokens-are" class="level3" data-number="2.3.1">
+<h3 data-number="2.3.1" class="anchored" data-anchor-id="what-tokens-are"><span class="header-section-number">2.3.1</span> What Tokens Are</h3>
+<p>First, let’s clarify tokens. LLMs don’t work directly with words or characters. They work with <strong>tokens</strong>, which are chunks of text that the model processes as units.</p>
+<p>As a rough heuristic: <strong>1 token ≈ ¾ of a word</strong> in English.</p>
+<p>Examples: - “cat” = 1 token - “butterfly” = 2 tokens (“butter” + “fly”) - “photosynthesis” = 4 tokens - “ChatGPT” = 2 tokens - “don’t” = 2 tokens (“don” + “’t”)</p>
+<p>Programming code, special characters, and non-English languages can have different token densities.</p>
+<p>Why tokens instead of words? Tokens allow the model to handle any text efficiently—including made-up words, code, mathematical symbols, and languages with different word structures.</p>
+</section>
+<section id="context-window-size" class="level3" data-number="2.3.2">
+<h3 data-number="2.3.2" class="anchored" data-anchor-id="context-window-size"><span class="header-section-number">2.3.2</span> Context Window Size</h3>
+<p>The context window is measured in tokens. Modern LLMs have context windows ranging from:</p>
+<ul>
+<li><strong>Early GPT-3:</strong> 4,096 tokens (~3,000 words)</li>
+<li><strong>GPT-4:</strong> 8,192 to 128,000 tokens (depending on version)</li>
+<li><strong>Claude 2:</strong> 100,000 tokens (~75,000 words)</li>
+<li><strong>Claude 3:</strong> 200,000 tokens</li>
+<li><strong>Gemini 1.5:</strong> 1,000,000+ tokens</li>
+</ul>
+<p>These numbers are increasing rapidly. By the time you read this, they may be larger.</p>
+</section>
+<section id="what-fits-in-context" class="level3" data-number="2.3.3">
+<h3 data-number="2.3.3" class="anchored" data-anchor-id="what-fits-in-context"><span class="header-section-number">2.3.3</span> What Fits in Context</h3>
+<p>Let’s make this concrete. A 100,000 token context window can hold approximately:</p>
+<ul>
+<li>A full novel (~75,000 words)</li>
+<li>50-100 pages of technical documentation</li>
+<li>An entire codebase of a small to medium application</li>
+<li>A complete conversation history with hundreds of back-and-forth messages</li>
+</ul>
+<p>This is the model’s <strong>complete awareness</strong> for any single response. Everything in the context window is “visible” to the model when it generates its next token.</p>
+</section>
+<section id="what-this-is-and-isnt" class="level3" data-number="2.3.4">
+<h3 data-number="2.3.4" class="anchored" data-anchor-id="what-this-is-and-isnt"><span class="header-section-number">2.3.4</span> What This Is and Isn’t</h3>
+<p><strong>What the context window is:</strong> - The model’s working memory for the current conversation - Everything the model can “see” when generating a response - Includes system prompts, conversation history, and any documents you’ve provided - Completely fresh for each new conversation</p>
+<p><strong>What the context window is not:</strong> - Long-term memory that persists between conversations - A database where the model looks up information - Selective (the model can’t choose to ignore parts of the context) - Infinite (there are hard limits, though they’re growing)</p>
+</section>
+<section id="implications-for-working-with-llms" class="level3" data-number="2.3.5">
+<h3 data-number="2.3.5" class="anchored" data-anchor-id="implications-for-working-with-llms"><span class="header-section-number">2.3.5</span> Implications for Working with LLMs</h3>
+<p>The context window has crucial implications:</p>
+<ol type="1">
+<li><p><strong>Stateless conversations:</strong> Each API call is independent. If you want the model to remember something, you must include it in every request. (Chat interfaces handle this for you by automatically including conversation history.)</p></li>
+<li><p><strong>Context management matters:</strong> Once you hit the limit, older messages must be removed or summarized. The model can’t remember what fell out of the window.</p></li>
+<li><p><strong>Everything counts:</strong> System prompts, your messages, the model’s responses, and any documents you include all consume the same context window.</p></li>
+<li><p><strong>Retrieval becomes necessary:</strong> For knowledge bases larger than the context window, you need strategies like RAG (Retrieval-Augmented Generation, covered in Chapter 10) to bring relevant information into context.</p></li>
+<li><p><strong>Cost implications:</strong> Larger contexts cost more. You pay for input and output tokens, so including a 50,000-token document in every request adds up quickly.</p></li>
+</ol>
+<p>Think of the context window like RAM in a computer. It’s fast and fully accessible, but limited. Everything the model can work with must fit in this space.</p>
+</section>
+</section>
+<section id="system-prompts-vs.-user-prompts" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="system-prompts-vs.-user-prompts"><span class="header-section-number">2.4</span> System Prompts vs.&nbsp;User Prompts</h2>
+<p>When you interact with an LLM, there are actually two types of messages shaping its behavior: <strong>system prompts</strong> and <strong>user prompts</strong>. Understanding the distinction is essential for effective use of AI agents.</p>
+<section id="system-prompt-the-job-description" class="level3" data-number="2.4.1">
+<h3 data-number="2.4.1" class="anchored" data-anchor-id="system-prompt-the-job-description"><span class="header-section-number">2.4.1</span> System Prompt: The Job Description</h3>
+<p>The system prompt (also called system message or system instruction) is set by the application developer, not the end user. It’s the model’s “job description” and “training manual.”</p>
+<p><strong>Example system prompt:</strong></p>
+<pre><code>You are a helpful customer support agent for Acme Corp.
+You have access to customer order history and can process
+returns. Be polite and professional. If you cannot answer
+a question, direct the customer to human support.
+Always verify customer identity before accessing account information.</code></pre>
+<p>This prompt is typically: - Set once at the beginning of a conversation - Not visible to the end user (though many applications now show it for transparency) - The same for all users of the application - Used to define the model’s role, capabilities, constraints, and personality</p>
+<p>The system prompt is where you configure the agent’s behavior at the application level.</p>
+</section>
+<section id="user-prompt-the-work-request" class="level3" data-number="2.4.2">
+<h3 data-number="2.4.2" class="anchored" data-anchor-id="user-prompt-the-work-request"><span class="header-section-number">2.4.2</span> User Prompt: The Work Request</h3>
+<p>The user prompt is what the end user types—their actual question, command, or request.</p>
+<p><strong>Example user prompts:</strong> - “Where is my order #12345?” - “I want to return the blue widget I ordered last week” - “What are your business hours?”</p>
+<p>User prompts are: - Different for every interaction - The specific task or question the user wants addressed - Processed in the context of the system prompt</p>
+</section>
+<section id="how-they-interact" class="level3" data-number="2.4.3">
+<h3 data-number="2.4.3" class="anchored" data-anchor-id="how-they-interact"><span class="header-section-number">2.4.3</span> How They Interact</h3>
+<p>When you send a message to an LLM, the actual context looks like this:</p>
+<pre><code>[System] You are a helpful customer support agent for Acme Corp...
+[User] Where is my order #12345?
+[Assistant] Let me look that up for you. [searches order history]
+[User] When will it arrive?
+[Assistant] According to the tracking information...</code></pre>
+<p>The system message persists throughout the conversation, shaping how the model interprets and responds to each user message.</p>
+</section>
+<section id="practical-examples" class="level3" data-number="2.4.4">
+<h3 data-number="2.4.4" class="anchored" data-anchor-id="practical-examples"><span class="header-section-number">2.4.4</span> Practical Examples</h3>
+<p><strong>Code debugging assistant:</strong></p>
+<pre><code>[System] You are an expert Python debugger. When given code
+with errors, explain what's wrong and suggest fixes. Include
+explanations of why the error occurred.
+
+[User] This code crashes: [code snippet]
+
+[Assistant] The issue is on line 5... [detailed explanation]</code></pre>
+<p><strong>Creative writing partner:</strong></p>
+<pre><code>[System] You are a creative writing assistant. Help users
+develop story ideas, characters, and plots. Be encouraging
+and build on their ideas rather than replacing them.
+
+[User] I have an idea for a sci-fi story about Mars
+
+[Assistant] That's a great starting point! What aspect of
+Mars interests you most—the colonization challenges, the
+isolation, the scientific discoveries?</code></pre>
+<p><strong>Data analyst agent:</strong></p>
+<pre><code>[System] You are a data analyst. You have access to tools
+for running SQL queries and creating visualizations. When
+analyzing data, always verify assumptions and note limitations.
+
+[User] What were our top-selling products last quarter?
+
+[Assistant] I'll query the sales database... [uses SQL tool]</code></pre>
+</section>
+<section id="what-these-are-and-are-not" class="level3" data-number="2.4.5">
+<h3 data-number="2.4.5" class="anchored" data-anchor-id="what-these-are-and-are-not"><span class="header-section-number">2.4.5</span> What These Are and Are Not</h3>
+<p><strong>What system prompts are:</strong> - Configuration for the model’s behavior and role - Persistent context that shapes all responses - The application developer’s way to customize the model - Instructions that carry more weight than user messages (usually)</p>
+<p><strong>What system prompts are not:</strong> - Absolute constraints that cannot be overridden (careful prompt engineering by users can sometimes work around them) - Programming in the traditional sense (they’re natural language suggestions, not code) - Guarantees of behavior (the model interprets them probabilistically)</p>
+<p><strong>What user prompts are:</strong> - The specific work request or question - Variable content from each user - Interpreted in the context of the system prompt</p>
+<p><strong>What user prompts are not:</strong> - The only input shaping the response (the system prompt is equally important) - Limited to questions (they can be commands, document analysis requests, code to debug, etc.)</p>
+</section>
+<section id="the-interaction-pattern" class="level3" data-number="2.4.6">
+<h3 data-number="2.4.6" class="anchored" data-anchor-id="the-interaction-pattern"><span class="header-section-number">2.4.6</span> The Interaction Pattern</h3>
+<p>The power comes from the combination:</p>
+<ul>
+<li><strong>System prompt</strong> defines what kind of assistant the model is</li>
+<li><strong>User prompt</strong> defines what the user wants done</li>
+<li><strong>Model response</strong> is shaped by both</li>
+</ul>
+<p>This separation allows developers to create specialized AI assistants without fine-tuning the model. Want a coding assistant? Write a system prompt that emphasizes code help. Want a creative writing partner? Write a different system prompt. Same underlying model, different configured behavior.</p>
+</section>
+</section>
+<section id="the-revolution-summarized" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="the-revolution-summarized"><span class="header-section-number">2.5</span> The Revolution Summarized</h2>
+<p>The shift from classification to generation represents a fundamental change in what AI systems can do:</p>
+<p><strong>Traditional AI:</strong> - Recognizes patterns and assigns categories - Limited to predefined outputs - Deterministic within narrow domains - Software remains in control</p>
+<p><strong>Generative AI:</strong> - Creates new content through prediction - Generates arbitrary text or images - Probabilistic and creative - Flexible instruction following</p>
+<p><strong>The enablers:</strong> - Training at scale (pretraining on vast text corpora) - Instruction fine-tuning (learning to be helpful assistants) - RLHF (aligning with human preferences) - Growing context windows (expanding working memory) - System prompts (configurable behavior without retraining)</p>
+<p>But here’s the key insight for this book: <strong>even generative models, used alone, are not agents</strong>.</p>
+<p>If you simply call an LLM API with a prompt and receive a text response, you’re still in the traditional integration pattern. The software sends data (the prompt), receives data (the generated text), and decides what to do next.</p>
+<p>The agent revolution—which we’ll explore in the coming chapters—happens when we give these generative models the ability to take actions, use tools, and make decisions about what to do next.</p>
+<p>First, though, we need to understand the middle ground: AI-powered workflows. These represent the bridge between traditional AI and true agents, and understanding them will clarify what makes agents special.</p>
+<p>That’s where we’re headed in Chapter 3.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./chapter1.html" class="pagination-link" aria-label="The AI You Already Know">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The AI You Already Know</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./intro.html" class="pagination-link" aria-label="Introduction">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Introduction</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

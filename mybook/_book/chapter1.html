@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>1&nbsp; The AI You Already Know – AI Agents for the IT Professional</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./intro.html" rel="next">
+<link href="./index.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-27c261d06b905028a18691de25d09dde.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./chapter1.html">Part I: Foundations — Understanding the AI Landscape</a></li><li class="breadcrumb-item"><a href="./chapter1.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The AI You Already Know</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">AI Agents for the IT Professional</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Foundations — Understanding the AI Landscape</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./chapter1.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The AI You Already Know</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Summary</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#classification-models-the-workhorse-of-traditional-ai" id="toc-classification-models-the-workhorse-of-traditional-ai" class="nav-link active" data-scroll-target="#classification-models-the-workhorse-of-traditional-ai"><span class="header-section-number">1.1</span> Classification Models: The Workhorse of Traditional AI</a>
+  <ul class="collapse">
+  <li><a href="#image-classification" id="toc-image-classification" class="nav-link" data-scroll-target="#image-classification"><span class="header-section-number">1.1.1</span> Image Classification</a></li>
+  <li><a href="#sequence-classification" id="toc-sequence-classification" class="nav-link" data-scroll-target="#sequence-classification"><span class="header-section-number">1.1.2</span> Sequence Classification</a></li>
+  <li><a href="#the-classification-pattern" id="toc-the-classification-pattern" class="nav-link" data-scroll-target="#the-classification-pattern"><span class="header-section-number">1.1.3</span> The Classification Pattern</a></li>
+  </ul></li>
+  <li><a href="#beyond-classification-other-recognition-models" id="toc-beyond-classification-other-recognition-models" class="nav-link" data-scroll-target="#beyond-classification-other-recognition-models"><span class="header-section-number">1.2</span> Beyond Classification: Other Recognition Models</a>
+  <ul class="collapse">
+  <li><a href="#object-detection" id="toc-object-detection" class="nav-link" data-scroll-target="#object-detection"><span class="header-section-number">1.2.1</span> Object Detection</a></li>
+  <li><a href="#image-segmentation" id="toc-image-segmentation" class="nav-link" data-scroll-target="#image-segmentation"><span class="header-section-number">1.2.2</span> Image Segmentation</a></li>
+  <li><a href="#optical-character-recognition-ocr" id="toc-optical-character-recognition-ocr" class="nav-link" data-scroll-target="#optical-character-recognition-ocr"><span class="header-section-number">1.2.3</span> Optical Character Recognition (OCR)</a></li>
+  <li><a href="#what-these-models-are-and-arent" id="toc-what-these-models-are-and-arent" class="nav-link" data-scroll-target="#what-these-models-are-and-arent"><span class="header-section-number">1.2.4</span> What These Models Are and Aren’t</a></li>
+  </ul></li>
+  <li><a href="#how-ai-has-traditionally-been-integrated-into-software" id="toc-how-ai-has-traditionally-been-integrated-into-software" class="nav-link" data-scroll-target="#how-ai-has-traditionally-been-integrated-into-software"><span class="header-section-number">1.3</span> How AI Has Traditionally Been Integrated into Software</a>
+  <ul class="collapse">
+  <li><a href="#the-api-call-pattern" id="toc-the-api-call-pattern" class="nav-link" data-scroll-target="#the-api-call-pattern"><span class="header-section-number">1.3.1</span> The API Call Pattern</a></li>
+  <li><a href="#examples-in-practice" id="toc-examples-in-practice" class="nav-link" data-scroll-target="#examples-in-practice"><span class="header-section-number">1.3.2</span> Examples in Practice</a></li>
+  <li><a href="#the-software-stays-normal" id="toc-the-software-stays-normal" class="nav-link" data-scroll-target="#the-software-stays-normal"><span class="header-section-number">1.3.3</span> The Software Stays “Normal”</a></li>
+  <li><a href="#the-limitations-of-this-pattern" id="toc-the-limitations-of-this-pattern" class="nav-link" data-scroll-target="#the-limitations-of-this-pattern"><span class="header-section-number">1.3.4</span> The Limitations of This Pattern</a></li>
+  </ul></li>
+  <li><a href="#the-foundation-weve-built" id="toc-the-foundation-weve-built" class="nav-link" data-scroll-target="#the-foundation-weve-built"><span class="header-section-number">1.4</span> The Foundation We’ve Built</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./chapter1.html">Part I: Foundations — Understanding the AI Landscape</a></li><li class="breadcrumb-item"><a href="./chapter1.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The AI You Already Know</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-ai-you-know" class="quarto-section-identifier"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The AI You Already Know</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><em>Establishing context for readers who have used AI but haven’t built with it</em></p>
+<p>You’ve likely used AI dozens of times already this week. When your email filtered out spam, when your phone unlocked by recognizing your face, when a store’s website recommended products you might like—these are all AI systems at work. They’re so integrated into our daily experience that we rarely pause to think about what’s happening under the hood.</p>
+<p>But if you’re reading this book, you’re probably interested in moving beyond being a user of AI systems to being a builder of them. And to build effectively with the latest generation of AI agents, it’s helpful to first understand what AI looked like before agents came along.</p>
+<p>This chapter establishes that foundation. We’ll explore the AI models you’ve been using, likely without realizing it, and understand both what they are and—critically—what they are not. This contrast will prepare you for the fundamental shift that generative models and agents represent.</p>
+<section id="classification-models-the-workhorse-of-traditional-ai" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="classification-models-the-workhorse-of-traditional-ai"><span class="header-section-number">1.1</span> Classification Models: The Workhorse of Traditional AI</h2>
+<p>For most of AI’s history in production systems, the dominant pattern has been <strong>classification</strong>. At its core, classification is about mapping inputs to predefined categories. You give the model some data, and it tells you which bucket that data belongs to.</p>
+<section id="image-classification" class="level3" data-number="1.1.1">
+<h3 data-number="1.1.1" class="anchored" data-anchor-id="image-classification"><span class="header-section-number">1.1.1</span> Image Classification</h3>
+<p>Consider a bird identification app. You take a photo of a bird, and the app tells you it’s a “Northern Cardinal” with 94% confidence. Under the hood, this is typically powered by a <strong>Convolutional Neural Network</strong> (CNN), a type of model specifically designed to process images.</p>
+<p>The CNN was trained on thousands of labeled images—pictures of cardinals tagged “Northern Cardinal,” pictures of blue jays tagged “Blue Jay,” and so on. Through training, it learned to recognize the patterns of colors, shapes, and textures that distinguish one bird species from another. When you submit your photo, the model processes it through many layers of learned transformations and outputs a probability distribution across all the bird species it knows about.</p>
+<p>What this model <strong>is</strong>: A highly specialized pattern recognition system that maps images to predefined categories.</p>
+<p>What this model <strong>is not</strong>: A system that understands what a bird is, can describe why it made its choice, or can generate new images of birds.</p>
+</section>
+<section id="sequence-classification" class="level3" data-number="1.1.2">
+<h3 data-number="1.1.2" class="anchored" data-anchor-id="sequence-classification"><span class="header-section-number">1.1.2</span> Sequence Classification</h3>
+<p>Text classification follows a similar pattern. Sentiment analysis—determining whether a product review is positive, negative, or neutral—is a classic example. Historically, models like <strong>Recurrent Neural Networks</strong> (RNNs) or <strong>Long Short-Term Memory</strong> (LSTM) networks were used for these tasks.</p>
+<p>An LSTM processes text sequentially, word by word, maintaining an internal state that helps it understand context. After processing “The food was delicious but the service was terrible,” it might output: 60% probability of “Mixed” sentiment, 25% “Negative,” 15% “Positive.”</p>
+<p>Again, the model maps input (text) to predefined categories (sentiment labels). It doesn’t compose new reviews, doesn’t understand the concept of customer service, and can’t engage in a conversation about the restaurant.</p>
+</section>
+<section id="the-classification-pattern" class="level3" data-number="1.1.3">
+<h3 data-number="1.1.3" class="anchored" data-anchor-id="the-classification-pattern"><span class="header-section-number">1.1.3</span> The Classification Pattern</h3>
+<p>The fundamental architecture of classification-based AI systems is straightforward:</p>
+<ol type="1">
+<li><strong>Training phase</strong>: The model learns from labeled examples (supervised learning)</li>
+<li><strong>Inference phase</strong>: New inputs are mapped to the learned categories</li>
+<li><strong>Output</strong>: A category label, often with a confidence score</li>
+</ol>
+<p>This pattern has powered countless successful applications:</p>
+<ul>
+<li>Spam detection (spam vs.&nbsp;not spam)</li>
+<li>Medical image analysis (tumor vs.&nbsp;no tumor)</li>
+<li>Voice assistants understanding commands (play music, set alarm, check weather)</li>
+<li>Credit card fraud detection (legitimate vs.&nbsp;fraudulent)</li>
+<li>Handwriting recognition (mapping handwritten digits to 0-9)</li>
+</ul>
+<p>The beauty of classification is its predictability and specificity. The model does exactly what it was trained to do: recognize patterns it has seen before and categorize new examples accordingly.</p>
+<p>The limitation is equally clear: the model cannot handle anything outside its predefined categories. Show a bird classifier a picture of a dog, and it will still tell you it’s some species of bird (whichever one the dog looks most like). It has no concept of “I don’t know” or “this isn’t a bird”—unless you explicitly train it on a “not a bird” category.</p>
+</section>
+</section>
+<section id="beyond-classification-other-recognition-models" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="beyond-classification-other-recognition-models"><span class="header-section-number">1.2</span> Beyond Classification: Other Recognition Models</h2>
+<p>While classification is the foundation, modern AI systems often need to do more than just assign a single label to an entire input. They need to find objects, locate text, or identify precise regions of interest. These recognition tasks build on classification but add spatial or structural awareness.</p>
+<section id="object-detection" class="level3" data-number="1.2.1">
+<h3 data-number="1.2.1" class="anchored" data-anchor-id="object-detection"><span class="header-section-number">1.2.1</span> Object Detection</h3>
+<p>Consider a self-driving car’s vision system. It doesn’t just need to know “there is a pedestrian in this image.” It needs to know <em>where</em> the pedestrian is, along with where the cars are, where the traffic lights are, and where the lane markings are—all simultaneously.</p>
+<p><strong>Object detection</strong> models like YOLO (You Only Look Once) or Faster R-CNN extend classification by:</p>
+<ol type="1">
+<li>Proposing multiple regions of interest within an image</li>
+<li>Classifying what’s in each region</li>
+<li>Drawing bounding boxes around detected objects</li>
+<li>Outputting multiple classifications per image, each with location data</li>
+</ol>
+<p>The output might be: “Person at coordinates (120, 45, 200, 300), 96% confidence; Car at coordinates (450, 100, 680, 250), 89% confidence; Stop sign at coordinates (50, 30, 100, 80), 94% confidence.”</p>
+<p>This is still fundamentally classification—just repeated across many regions of the image. The model identifies and locates things, but it doesn’t understand the scene, can’t predict what will happen next, and can’t generate an image of a car.</p>
+</section>
+<section id="image-segmentation" class="level3" data-number="1.2.2">
+<h3 data-number="1.2.2" class="anchored" data-anchor-id="image-segmentation"><span class="header-section-number">1.2.2</span> Image Segmentation</h3>
+<p>Going a step further, <strong>segmentation</strong> models classify every single pixel in an image. Instead of drawing boxes around objects, they create precise masks.</p>
+<p>In medical imaging, for instance, a segmentation model might highlight every pixel belonging to a tumor in an MRI scan. This pixel-level classification enables precise measurement and analysis.</p>
+<p>In consumer applications, the “portrait mode” blur effect on smartphone cameras uses segmentation to identify exactly which pixels are the person (keep in focus) versus the background (blur).</p>
+</section>
+<section id="optical-character-recognition-ocr" class="level3" data-number="1.2.3">
+<h3 data-number="1.2.3" class="anchored" data-anchor-id="optical-character-recognition-ocr"><span class="header-section-number">1.2.3</span> Optical Character Recognition (OCR)</h3>
+<p>OCR is another specialized recognition task. Point your phone at a document, and apps can extract the text. Systems like Tesseract or modern deep learning OCR models:</p>
+<ol type="1">
+<li>Detect regions of text in an image</li>
+<li>Segment individual characters or words</li>
+<li>Classify each character</li>
+<li>Output the recognized text</li>
+</ol>
+<p>Modern OCR systems can handle complex layouts, multiple languages, and varying fonts with impressive accuracy. But fundamentally, they’re still recognizing patterns they were trained on and mapping them to predefined characters.</p>
+</section>
+<section id="what-these-models-are-and-arent" class="level3" data-number="1.2.4">
+<h3 data-number="1.2.4" class="anchored" data-anchor-id="what-these-models-are-and-arent"><span class="header-section-number">1.2.4</span> What These Models Are and Aren’t</h3>
+<p>All these recognition models share key characteristics:</p>
+<p><strong>What they are:</strong> - Pattern recognition systems trained on specific types of data - Highly specialized for particular tasks (images → labels, images → boxes, images → text) - Deterministic in architecture (though individual predictions may vary slightly) - Fast and efficient at inference time - Excellent at tasks they were specifically trained for</p>
+<p><strong>What they are not:</strong> - General-purpose reasoning systems - Capable of understanding context or meaning deeply - Able to handle tasks outside their training domain - Creative or generative - Able to explain their decisions in natural language</p>
+<p>These models identify and locate things in data. They’re the AI equivalent of a highly skilled specialist who can instantly recognize thousands of specific patterns but can’t step outside their narrow expertise.</p>
+</section>
+</section>
+<section id="how-ai-has-traditionally-been-integrated-into-software" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="how-ai-has-traditionally-been-integrated-into-software"><span class="header-section-number">1.3</span> How AI Has Traditionally Been Integrated into Software</h2>
+<p>Understanding how classification and recognition models have been integrated into traditional software is crucial for appreciating how different AI agents are.</p>
+<section id="the-api-call-pattern" class="level3" data-number="1.3.1">
+<h3 data-number="1.3.1" class="anchored" data-anchor-id="the-api-call-pattern"><span class="header-section-number">1.3.1</span> The API Call Pattern</h3>
+<p>Historically, AI has been treated as a <strong>black box service</strong> within larger software systems. The pattern looks like this:</p>
+<pre><code>Software: "Here's some data. What category is it?"
+AI Model: "Category B, 87% confidence."
+Software: "Thank you. I'll proceed accordingly."</code></pre>
+<p>The AI component is essentially a sophisticated function call. You send data in, you get a label (and maybe a confidence score) back. The software remains firmly in control of the decision-making.</p>
+</section>
+<section id="examples-in-practice" class="level3" data-number="1.3.2">
+<h3 data-number="1.3.2" class="anchored" data-anchor-id="examples-in-practice"><span class="header-section-number">1.3.2</span> Examples in Practice</h3>
+<p><strong>Email spam filtering:</strong></p>
+<pre><code>Email arrives → Extract features (sender, content, links, etc.)
+             → Send to spam classifier
+             → Receive: "spam" (95% confidence)
+             → Move to spam folder</code></pre>
+<p>The email client makes all the decisions. The AI model just provides one piece of information (spam probability) that the client uses in its predetermined workflow.</p>
+<p><strong>Document processing:</strong></p>
+<pre><code>Upload receipt image → Send to OCR service
+                     → Receive: Extracted text
+                     → Parse text with regular expressions
+                     → Extract total amount
+                     → Store in database</code></pre>
+<p>The OCR is just one step in a traditional, deterministic pipeline. The application logic controls the entire flow.</p>
+<p><strong>Content moderation:</strong></p>
+<pre><code>User submits comment → Send to toxicity classifier
+                     → Receive: "toxic" (72% confidence)
+                     → If confidence &gt; 80%: Auto-reject
+                     → Else if confidence &gt; 50%: Queue for human review
+                     → Else: Auto-approve</code></pre>
+<p>Notice how the software defines exact thresholds and workflows. The AI provides a score; the software decides what to do with it.</p>
+</section>
+<section id="the-software-stays-normal" class="level3" data-number="1.3.3">
+<h3 data-number="1.3.3" class="anchored" data-anchor-id="the-software-stays-normal"><span class="header-section-number">1.3.3</span> The Software Stays “Normal”</h3>
+<p>This integration pattern has a crucial property: <strong>the software remains deterministic, predictable, and in control</strong>.</p>
+<p>The AI component might use neural networks and complex mathematics internally, but from the software’s perspective, it’s just a function that returns a value. You can write traditional unit tests, set up monitoring, handle errors in familiar ways, and reason about the system’s behavior using standard software engineering practices.</p>
+<p>The AI is a tool the software uses, not a partner that makes decisions.</p>
+</section>
+<section id="the-limitations-of-this-pattern" class="level3" data-number="1.3.4">
+<h3 data-number="1.3.4" class="anchored" data-anchor-id="the-limitations-of-this-pattern"><span class="header-section-number">1.3.4</span> The Limitations of This Pattern</h3>
+<p>This approach has served us well for many applications, but it has fundamental limitations:</p>
+<ol type="1">
+<li><strong>Fixed categories</strong>: You can only get answers to questions you anticipated during training</li>
+<li><strong>No reasoning</strong>: The model can’t think through multi-step problems or adapt its approach</li>
+<li><strong>No generation</strong>: These models recognize and classify; they don’t create</li>
+<li><strong>No context accumulation</strong>: Each API call is independent; the model doesn’t remember previous interactions</li>
+<li><strong>Software brittleness</strong>: Every possible scenario must be anticipated and coded</li>
+</ol>
+<p>If you want the system to do something new, you need to either: - Retrain or fine-tune the model with new categories - Write new code to handle the new workflow - Or both</p>
+<p>The system cannot adapt on its own. It cannot handle novel situations it wasn’t explicitly programmed for.</p>
+</section>
+</section>
+<section id="the-foundation-weve-built" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="the-foundation-weve-built"><span class="header-section-number">1.4</span> The Foundation We’ve Built</h2>
+<p>The AI you already know—the classification models and recognition systems—represents the first generation of production AI. These systems are narrow, specialized, and require explicit programming for every behavior.</p>
+<p>They’ve been immensely valuable: - They’ve automated tasks that were previously impossible to automate at scale - They’ve provided capabilities (like image recognition) that traditional algorithms couldn’t approach - They’ve been deployed successfully in countless applications - They’ve established patterns and best practices for AI integration</p>
+<p>But they’ve also been fundamentally limited by their nature. They’re tools that software uses, not collaborators that reason and decide.</p>
+<p>This is the baseline. This is what AI looked like before generative models and agents entered the picture. As we’ll see in the next chapter, the shift from classification to generation isn’t just an incremental improvement—it’s a fundamental change in what AI systems can do and how we work with them.</p>
+<p>Before we move on, internalize this contrast:</p>
+<p><strong>Traditional AI</strong>: Software asks, “What category is this?” AI answers. Software decides what to do next.</p>
+<p><strong>The coming shift</strong>: You’ll describe a goal. The AI will figure out how to achieve it, what tools to use, and what steps to take. The AI becomes the decision-maker.</p>
+<p>That shift changes everything. And it starts with understanding what generative models actually are.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./index.html" class="pagination-link" aria-label="Preface">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Preface</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./intro.html" class="pagination-link" aria-label="Introduction">
+        <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Introduction</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

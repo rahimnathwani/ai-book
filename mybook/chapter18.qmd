@@ -1,0 +1,382 @@
+# What Agents Are Bad At (Today) {#sec-limitations}
+
+*Knowing the boundaries*
+
+Throughout this book, we've explored what agents can do. Now let's be honest about what they can't do—or at least, what they do poorly.
+
+Understanding limitations is crucial for two reasons:
+1. You'll make better decisions about when to use agents
+2. You'll design better systems by working with (not against) these constraints
+
+This chapter catalogs the current limitations of AI agents, explains why these limitations exist, and suggests workarounds where possible.
+
+## Tasks Requiring Precise Computation
+
+**Limitation:** Agents are bad at exact arithmetic, string manipulation, and computations where "close" isn't good enough.
+
+**Examples:**
+```
+Agent: "The sum of these 50 numbers is approximately 4,238"
+Reality: The sum is exactly 4,195
+```
+
+```
+Agent: "After parsing, we have around 847 valid email addresses"
+Reality: There are 851
+```
+
+**Why:** LLMs generate text probabilistically. They're not calculators. They predict what number "looks right" based on patterns, not actual computation.
+
+**Solution:** Have agents write code to perform precise computations
+
+```python
+# Don't ask agent to calculate
+# Do ask agent to write code that calculates
+
+agent_instruction = """
+Sum the numbers in data.csv.
+Write Python code to do this precisely.
+"""
+
+# Agent writes:
+import pandas as pd
+df = pd.read_csv('data.csv')
+total = df['amount'].sum()
+print(f"Exact sum: {total}")
+```
+
+**Takeaway:** For anything requiring precision—math, counting, exact string matching—have the agent generate code, not do the computation directly.
+
+## Tasks Requiring Unavailable Knowledge
+
+**Limitation:** Agents only know what's in their training data or what you provide in context.
+
+**Examples:**
+```
+User: "What's our Q4 revenue?"
+Agent: "Based on industry trends, typical Q4 revenue would be..."
+(Makes up plausible but wrong number)
+```
+
+```
+User: "Check if Sarah approved the budget request"
+Agent: "I don't have access to approval records"
+(Honest, but unhelpful)
+```
+
+**Why:** Training data doesn't include your proprietary information. Agent has no way to know unless you provide it.
+
+**Solutions:**
+
+**1. Provide information in context**
+```
+"Here's our Q4 revenue data: [data]
+Analyze it and provide insights."
+```
+
+**2. Give agent tools to retrieve information**
+```python
+tools = [
+    query_revenue_database,
+    check_approval_status,
+    search_internal_docs
+]
+```
+
+**3. Use RAG for large knowledge bases**
+```
+Agent uses semantic search to find relevant docs
+Docs included in context
+Agent answers based on retrieved information
+```
+
+**Takeaway:** Don't expect agents to know things they haven't been told. Design information access into your system.
+
+## Tasks Requiring Physical World Interaction
+
+**Limitation:** Agents operate in the digital realm. They can't manipulate physical objects.
+
+**Examples:**
+- Can't physically inspect equipment
+- Can't perform lab experiments
+- Can't repair hardware
+- Can't handle physical inventory
+
+**Why:** LLMs are software. No physical embodiment.
+
+**What agents *can* do:**
+- Interpret sensor data
+- Control robots/equipment via APIs
+- Analyze images/video of physical world
+- Orchestrate physical processes through digital interfaces
+
+**Example:**
+```
+❌ Agent cannot: Physically check if server is overheating
+
+✓ Agent can: Read temperature sensors, interpret data, trigger
+alerts, schedule maintenance via ticketing system
+```
+
+**Takeaway:** Agents can orchestrate and analyze, but not manipulate physical reality directly.
+
+## Very Long Time Horizon Tasks
+
+**Limitation:** Maintaining coherent state and purpose over hours/days/weeks is difficult.
+
+**Why:**
+- Context window limits (can't keep entire history)
+- No persistent memory between sessions
+- State management complexity
+- Drift in goals/understanding over time
+
+**Example of challenge:**
+```
+Task: "Monitor this project for next 3 months, provide weekly updates"
+
+Week 1: Agent reports status ✓
+Week 2: Agent reports status ✓
+Week 4: Agent loses context of what it's tracking
+Week 8: Agent forgets original goal
+```
+
+**Solutions:**
+
+**1. Break into discrete sessions**
+```
+Instead of: One 3-month session
+Use: 12 weekly sessions with explicit state handoff
+```
+
+**2. External state management**
+```python
+class LongRunningTask:
+    def __init__(self):
+        self.state = load_state()
+
+    def weekly_update(self):
+        # Agent gets current state
+        result = agent.execute_with_context(self.state)
+
+        # Update state
+        self.state.update(result.new_state)
+        save_state(self.state)
+```
+
+**3. Human check-ins**
+```
+Agent: "It's been a month. Let me summarize what I've been tracking
+        and confirm this is still the priority..."
+```
+
+**Takeaway:** Long-running tasks need explicit state management and periodic human oversight.
+
+## Zero-Error-Tolerance Tasks
+
+**Limitation:** Agents cannot guarantee perfection.
+
+**Examples of inappropriate use:**
+- Flight control systems
+- Medical treatment decisions without human oversight
+- Financial transactions without approval
+- Security-critical operations
+- Legal compliance determination
+
+**Why:** Agents are probabilistic. They make mistakes. Hallucination is inherent.
+
+**When you need zero tolerance:**
+- Use traditional deterministic software
+- Or use agents with extensive human oversight (AI-assisted, not AI-executed)
+
+**Example:**
+```
+❌ Agent autonomously approves financial wire transfers
+
+✓ Agent drafts transfer request, flags anomalies, human approves
+```
+
+**Takeaway:** Critical systems where any error is catastrophic need deterministic solutions or heavy human oversight.
+
+## Tasks with Vague Success Criteria
+
+**Limitation:** Agents need clear goals. "Make it better" is hard to execute.
+
+**Vague requests:**
+```
+"Improve our website"
+"Make this code cleaner"
+"Optimize the process"
+```
+
+**Why these fail:**
+- "Better" is undefined
+- Agent doesn't know what dimensions matter
+- No way to know when done
+- Different interpretations of success
+
+**How to fix:**
+```
+Instead of: "Improve our website"
+Specific: "Improve website load time to under 2 seconds and increase
+           conversion rate by adding clear CTAs to product pages"
+
+Instead of: "Make this code cleaner"
+Specific: "Refactor this function to reduce complexity (McCabe score < 10),
+           add type hints, and extract repeated logic into helper functions"
+
+Instead of: "Optimize the process"
+Specific: "Reduce customer onboarding time from 3 days to 1 day by
+           automating document verification and pre-filling forms"
+```
+
+**Takeaway:** Vague goals produce vague results. Specific criteria enable focused execution.
+
+## Tasks Requiring Guarantees
+
+**Limitation:** Can't guarantee behavior, compliance, or correctness.
+
+**Examples:**
+```
+"Ensure this never violates GDPR"
+→ Can help, can't guarantee
+
+"Make certain all customers are billed correctly"
+→ Can assist, can't be certain
+
+"Guarantee this email is professional"
+→ Can attempt, can't guarantee
+```
+
+**Why:** Non-deterministic. No way to prove "always" or "never".
+
+**Approach:**
+- Use agents to assist
+- Add verification layers
+- Include human oversight
+- Accept risk or use traditional systems
+
+**Takeaway:** Where guarantees are legally or practically required, agents can assist but rarely substitute entirely.
+
+## Highly Creative or Artistic Tasks (Sometimes)
+
+**Limitation:** Agents can generate creative content, but may lack true originality or artistic vision.
+
+**What agents do well:**
+- Variations on themes
+- Combinations of known styles
+- Structured creativity (poems, stories with constraints)
+- Brainstorming and ideation
+
+**What agents struggle with:**
+- Truly novel artistic movements
+- Deeply personal creative voice
+- Work requiring life experience
+- Artistic vision with specific emotional impact
+
+**Context matters:**
+```
+✓ "Generate 10 product names for an AI code review tool"
+  (Agents excel at this)
+
+✓ "Write a blog post explaining RAG"
+  (Agents can do this well)
+
+? "Create a thought-provoking piece of art that challenges societal norms"
+  (Debatable; lacks lived experience)
+
+? "Write a novel with the emotional depth of great literature"
+  (Can produce words, but depth?)
+```
+
+**Takeaway:** Agents are valuable creative assistants but may not replace human artists for work requiring genuine novelty or deep human experience.
+
+## Complex Ethical or Moral Judgments
+
+**Limitation:** Agents can analyze ethical frameworks but shouldn't make final moral decisions.
+
+**Why:**
+- Ethics are culturally dependent
+- Require lived human experience
+- Involve values, not just logic
+- Society assigns moral responsibility to humans
+
+**Example:**
+```
+❌ Agent decides: "This employee should be terminated for ethical violation"
+
+✓ Agent assists: "This behavior violates policies X and Y. Similar cases
+  resulted in outcomes A, B, C. Here are considerations for your decision..."
+
+Human decides with agent input.
+```
+
+**Takeaway:** Agents can inform ethical decisions but humans should make them.
+
+## The Improving Over Time Caveat
+
+**Important:** These limitations are "as of today" (late 2024/early 2025).
+
+**Improving rapidly:**
+- Arithmetic ability (better with code generation)
+- Long context understanding (1M+ token windows)
+- Reliability (better training, RLHF)
+- Specialized capabilities (domain-specific models)
+
+**Likely to remain challenging:**
+- Physical world interaction (fundamental constraint)
+- Zero-error guarantees (probabilistic nature)
+- Tasks requiring lived experience
+- Moral responsibility (philosophical/societal)
+
+**Don't assume permanent:** Test capabilities with current models. What's impossible today may be routine tomorrow.
+
+## Knowing When to Use (and Not Use) Agents
+
+**Use agents for:**
+- Novel problem-solving ✓
+- Understanding unstructured data ✓
+- Multi-step reasoning ✓
+- Natural language interaction ✓
+- Adapting to variation ✓
+- Scaling expertise ✓
+
+**Don't use agents for:**
+- Precise computation ✗ (use code)
+- Zero-error requirements ✗ (use deterministic systems)
+- Physical manipulation ✗ (robots with agent control, maybe)
+- Tasks they don't have knowledge for ✗ (without tools/RAG)
+- Where you can't tolerate mistakes ✗ (or add heavy oversight)
+
+**Consider carefully:**
+- Creative work (good assistant, may lack genius)
+- Long-running tasks (needs state management)
+- Ethical decisions (inform, not decide)
+- Guarantees required (assistance only)
+
+## Practical Wisdom
+
+**1. Know your tolerance for imperfection**
+If you need perfection, agents probably aren't the answer (or need to be heavily constrained/supervised).
+
+**2. Design for agents' strengths**
+Reasoning, interpretation, generation, adaptation—these are superpowers. Use them.
+
+**3. Compensate for weaknesses**
+- Precise computation? Have agent write code
+- Knowledge gaps? Provide tools/RAG
+- Long time horizons? Chunk and manage state
+- Need verification? Add review steps
+
+**4. Don't force it**
+Some tasks genuinely shouldn't use agents. That's okay. Use the right tool for the job.
+
+**5. Stay current**
+Limitations shift as models improve. Reassess periodically.
+
+## Looking Ahead
+
+Understanding what agents can't do helps you make smart decisions about implementation. But there's another critical decision: build from scratch or configure existing systems?
+
+The next chapter tackles the build vs. configure decision—when to use existing agent harnesses with custom tools versus building your own infrastructure from the ground up.
+
+Because sometimes the best code is the code you don't write.

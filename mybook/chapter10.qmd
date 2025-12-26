@@ -1,0 +1,541 @@
+# RAG and Knowledge Access {#sec-rag}
+
+*Giving agents access to information they weren't trained on*
+
+An agent can reason brilliantly, use tools effectively, and write perfect code—but none of that matters if it doesn't have access to the right information.
+
+LLMs have two fundamental knowledge limitations:
+
+1. They only "know" what was in their training data
+2. Their working memory (context window) is limited
+
+Your company's internal procedures, last week's meeting notes, proprietary customer data, current inventory levels—none of this is in the model's training data. And your entire knowledge base probably won't fit in the context window.
+
+This chapter explores how to give agents access to the knowledge they need through **Retrieval-Augmented Generation (RAG)** and other knowledge access patterns.
+
+## The Knowledge Problem
+
+Let's start by clearly defining the challenge.
+
+### What LLMs Know (and Don't Know)
+
+**LLMs know:**
+- Patterns from their training data (books, websites, code, conversations up to their training cutoff)
+- General knowledge about the world as it was during training
+- Common programming languages and frameworks
+- Widely-documented facts and procedures
+- General reasoning patterns
+
+**LLMs don't know:**
+- Your company's specific processes and policies
+- Information from documents they've never seen
+- Current events after their training cutoff
+- Proprietary data not in public training sets
+- Your customer's specific details
+- The contents of your databases
+- Your internal terminology and acronyms
+
+### The Context Window Limit
+
+Even if you could include all relevant information in every request, context windows have limits.
+
+While modern context windows are large (100K-1M+ tokens), your knowledge base might be larger:
+
+- Company documentation: 10M+ tokens
+- Customer support history: 100M+ tokens
+- Product manuals and specifications: 50M+ tokens
+- Code repositories: Variable, often huge
+
+You can't include everything in every request.
+
+**The solution:** Dynamically retrieve and include only the relevant information for each specific task.
+
+## Retrieval-Augmented Generation (RAG)
+
+RAG is a pattern that addresses the knowledge problem by:
+
+1. **Storing** knowledge in a searchable format
+2. **Retrieving** relevant information based on the current query
+3. **Augmenting** the agent's context with retrieved information
+4. **Generating** responses based on both the query and retrieved context
+
+### The RAG Flow
+
+**Without RAG:**
+```
+User query → LLM → Response (based only on training data)
+```
+Limited to what the model was trained on.
+
+**With RAG:**
+```
+User query → Retrieve relevant documents from knowledge base
+          → Construct prompt with query + retrieved documents
+          → LLM → Response (based on training data + retrieved info)
+```
+The model can now answer based on your specific knowledge.
+
+### A Concrete Example
+
+**Scenario:** Customer support agent needs to answer policy questions
+
+**Question:** "What's your return policy for software licenses?"
+
+**Without RAG:**
+```
+Agent: "Typically, software licenses are non-refundable, but policies
+vary by company. You should check with the specific vendor..."
+```
+Generic, unhelpful answer based on general knowledge.
+
+**With RAG:**
+```
+1. Query received: "return policy for software licenses"
+
+2. Retrieval system searches knowledge base:
+   - Finds: "Software License Return Policy" document
+   - Finds: "Refund Process Guide"
+   - Finds: "Customer FAQ - Returns"
+
+3. Most relevant sections retrieved and added to context:
+   "Our software licenses can be returned within 30 days of purchase
+   for a full refund if the software has not been activated. Once
+   activated, licenses are non-refundable except in cases of technical
+   issues that our support team cannot resolve..."
+
+4. Agent generates response based on retrieved policy:
+   "We offer a 30-day return window for software licenses, with a
+   full refund available if the license hasn't been activated. If
+   you've already activated the license, returns are only accepted
+   in cases where we cannot resolve technical issues. Would you like
+   help processing a return?"
+```
+
+Accurate, specific, helpful—based on actual company policy.
+
+## Implementing RAG
+
+Let's break down how RAG systems work under the hood.
+
+### Step 1: Document Preparation
+
+**Chunking:**
+Large documents are split into smaller, meaningful chunks.
+
+Why? Because:
+- Retrieval works better on focused chunks
+- Context windows accommodate multiple relevant chunks better than whole documents
+- Precision improves (return the relevant section, not the whole manual)
+
+**Chunking strategies:**
+
+**Fixed-size chunks:**
+```
+Split every 500 tokens, with 50 token overlap
+```
+Simple but may split mid-thought.
+
+**Semantic chunks:**
+```
+Split on section boundaries, paragraphs, or semantic breaks
+```
+Preserves meaning but variable size.
+
+**Hybrid:**
+```
+Split on semantic boundaries, but enforce max size
+```
+Balance of both approaches.
+
+**Example:**
+```
+Original document (10,000 words)
+    ↓ (chunk)
+150 chunks of ~250 words each (with overlap)
+```
+
+### Step 2: Embedding
+
+Each chunk is converted into a **vector embedding**—a numerical representation that captures semantic meaning.
+
+**How it works:**
+```python
+chunk_text = "Our return policy allows 30-day returns..."
+
+embedding = embedding_model.encode(chunk_text)
+# Result: [0.23, -0.45, 0.67, -0.12, ...] (typically 768-1536 dimensions)
+```
+
+**Key insight:** Semantically similar text produces similar embedding vectors.
+
+"return policy" and "refund policy" will have similar embeddings, even though the words differ.
+
+### Step 3: Storage in Vector Database
+
+Embeddings are stored in a **vector database** designed for similarity search.
+
+**Popular vector databases:**
+- Pinecone
+- Weaviate
+- Qdrant
+- Milvus
+- Chroma
+- FAISS (library, not a service)
+
+**What's stored:**
+```
+{
+  "id": "doc_123_chunk_5",
+  "embedding": [0.23, -0.45, 0.67, ...],
+  "text": "Original chunk text...",
+  "metadata": {
+    "document": "return_policy.pdf",
+    "section": "Software Returns",
+    "last_updated": "2024-01-15"
+  }
+}
+```
+
+### Step 4: Query-Time Retrieval
+
+**When a query arrives:**
+
+1. **Embed the query:**
+```python
+query = "Can I return activated software?"
+query_embedding = embedding_model.encode(query)
+```
+
+2. **Similarity search:**
+```python
+results = vector_db.search(
+    query_embedding,
+    top_k=5  # Return top 5 most similar chunks
+)
+```
+
+The vector database finds chunks whose embeddings are closest to the query embedding (using cosine similarity or other distance metrics).
+
+3. **Retrieve chunks:**
+```
+Results:
+1. "Software licenses can be returned within 30 days..." (similarity: 0.89)
+2. "Activated licenses are non-refundable except..." (similarity: 0.85)
+3. "To process a return, contact support at..." (similarity: 0.78)
+4. "Refund process typically takes 5-7 business days..." (similarity: 0.72)
+5. "See our general return policy for physical products..." (similarity: 0.65)
+```
+
+### Step 5: Augmentation and Generation
+
+**Construct the prompt:**
+```
+System: You are a helpful customer support agent. Use the following
+information to answer questions accurately.
+
+Context from knowledge base:
+---
+[Chunk 1]: "Software licenses can be returned within 30 days..."
+[Chunk 2]: "Activated licenses are non-refundable except..."
+[Chunk 3]: "To process a return, contact support at..."
+---
+
+User question: Can I return activated software?
+
+Answer the question based on the context provided. If the context
+doesn't contain enough information, say so rather than guessing.
+```
+
+**Agent generates response** based on the retrieved context.
+
+### The Complete Flow
+
+```python
+def answer_with_rag(question, knowledge_base):
+    # 1. Embed the question
+    question_embedding = embed(question)
+
+    # 2. Retrieve relevant chunks
+    relevant_chunks = knowledge_base.search(
+        question_embedding,
+        top_k=5
+    )
+
+    # 3. Construct prompt with context
+    context = "\n\n".join([chunk.text for chunk in relevant_chunks])
+    prompt = f"""
+    Use this information to answer the question:
+
+    Context:
+    {context}
+
+    Question: {question}
+
+    Answer:
+    """
+
+    # 4. Generate response
+    response = llm.generate(prompt)
+
+    return response
+```
+
+## Practical Considerations for RAG
+
+### Chunk Size Trade-offs
+
+**Smaller chunks (100-200 tokens):**
+- ✅ More precise retrieval
+- ✅ Fit more chunks in context
+- ❌ May lack surrounding context
+- ❌ More chunks to manage
+
+**Larger chunks (500-1000 tokens):**
+- ✅ More context per chunk
+- ✅ Less fragmentation of ideas
+- ❌ Less precise retrieval
+- ❌ Fewer chunks fit in context window
+
+**Sweet spot:** Often 250-400 tokens with 20-50 token overlap
+
+### Number of Retrieved Chunks
+
+**Retrieve too few:**
+- May miss relevant information
+- Incomplete answers
+
+**Retrieve too many:**
+- Uses up context window
+- May include irrelevant information
+- Agent must sort through more noise
+
+**Common approach:** Start with top 3-5, adjust based on results
+
+### Metadata Filtering
+
+Enhance retrieval with metadata:
+
+```python
+# Only search within specific documents
+results = vector_db.search(
+    query_embedding,
+    top_k=5,
+    filter={"document_type": "policy", "department": "legal"}
+)
+
+# Only search recent documents
+results = vector_db.search(
+    query_embedding,
+    top_k=5,
+    filter={"last_updated": {"$gte": "2024-01-01"}}
+)
+```
+
+This combines semantic search (via embeddings) with structured filtering (via metadata).
+
+### Handling Contradictions
+
+What if retrieved chunks contradict each other?
+
+**Strategy 1: Include recency metadata**
+```
+Instruct the agent: "If information conflicts, prefer more recent documents."
+```
+
+**Strategy 2: Include authority metadata**
+```
+Instruct the agent: "Official policy documents override blog posts or FAQs."
+```
+
+**Strategy 3: Present conflicts explicitly**
+```
+Instruct the agent: "If you find conflicting information, note the conflict
+and ask for clarification about which source to trust."
+```
+
+### When RAG Isn't Enough
+
+RAG has limitations:
+
+**Limitations:**
+- Retrieval depends on semantic similarity (may miss relevant docs with different terminology)
+- Chunks may lack necessary context
+- Cross-document reasoning is harder
+- Retrieval accuracy affects answer quality
+
+**When to consider alternatives:**
+- Very specialized knowledge → Fine-tuning might help
+- Need to retrieve structured data → Direct database queries
+- Knowledge changes constantly → Real-time APIs instead
+- Knowledge is small enough → Include directly in system prompt
+
+## RAG vs. Fine-Tuning vs. Better Prompts
+
+Let's clarify when to use each approach.
+
+### Better Prompts
+
+**Use when:**
+- The model has the knowledge but needs guidance on how to apply it
+- The task is about behavior, tone, or format rather than knowledge
+- Information can fit in the system prompt
+
+**Example:**
+```
+Instead of: "Summarize this document"
+Better prompt: "Summarize this document in 3 bullet points, focusing
+on action items and decisions made"
+```
+
+### RAG
+
+**Use when:**
+- Knowledge is proprietary or post-training-cutoff
+- Knowledge base is large (won't fit in prompt)
+- Knowledge changes frequently (can update vector DB without retraining)
+- Need to cite sources
+
+**Example:**
+- Customer support using company documentation
+- Research assistant accessing academic papers
+- Code assistant referencing your private codebase
+
+### Fine-Tuning
+
+**Use when:**
+- Need to change model behavior patterns (not just add knowledge)
+- Want to teach specific response styles
+- Optimizing for cost (baking knowledge in can be cheaper than retrieval)
+- Need very specialized domain expertise
+
+**Example:**
+- Medical assistant that consistently follows clinical protocols
+- Legal assistant that writes in specific legal formats
+- Code assistant that matches your company's coding style
+
+### What RAG Is and Isn't
+
+**What RAG is:**
+- A retrieval pattern that augments the model's context with relevant information
+- Dynamic (different information retrieved for different queries)
+- Updatable (change knowledge base without retraining)
+- Traceable (you know what information was used)
+
+**What RAG is not:**
+- A replacement for good prompting (you still need clear instructions)
+- A substitute for appropriate model selection (retrieval doesn't make a weak model strong)
+- Automatic (requires thoughtful document preparation and chunking)
+- Perfect (retrieval accuracy matters)
+
+## Implementing RAG for Agents
+
+When integrating RAG with agents:
+
+### Option 1: RAG as a Tool
+
+Give the agent a tool that searches your knowledge base:
+
+```python
+Tool: search_knowledge_base
+Description: Searches company documentation for relevant information.
+Use this when you need to find specific policies, procedures, or
+technical details from company documents.
+
+Parameters:
+  query (string): The search query describing what information you need
+
+Returns: Top 5 relevant document sections with source citations
+```
+
+**The agent decides when to use it:**
+```
+Agent: "The user is asking about our data retention policy. I should
+search the knowledge base."
+[Uses search_knowledge_base tool]
+[Receives relevant policy sections]
+Agent: "Based on the policy, our data retention period is..."
+```
+
+### Option 2: Automatic RAG
+
+Automatically retrieve relevant context for every query:
+
+```python
+def agent_with_rag(user_query):
+    # Always retrieve relevant context
+    context = rag_retrieve(user_query)
+
+    # Include in agent's context
+    prompt = f"""
+    {system_prompt}
+
+    Relevant context:
+    {context}
+
+    User: {user_query}
+    """
+
+    return agent.run(prompt)
+```
+
+**Trade-offs:**
+- Option 1: Agent controls when to search (more flexible, uses context wisely)
+- Option 2: Always have context (simpler, but may include irrelevant information)
+
+**Recommendation:** Option 1 for agents (let them decide when knowledge lookup is needed)
+
+## Example: Technical Support Agent with RAG
+
+**System setup:**
+
+1. **Knowledge base:** All product documentation, FAQs, troubleshooting guides
+2. **Chunking:** 300-token chunks with 30-token overlap
+3. **Vector DB:** Stores embeddings + metadata (product, version, section)
+4. **Tools:** Agent has `search_documentation` tool
+
+**User query:** "Installation fails with error code E4012"
+
+**Agent flow:**
+
+```
+Agent: "User has an installation error. I should search documentation
+for this error code."
+
+[Calls: search_documentation("error code E4012")]
+
+Retrieved context:
+"Error E4012 indicates insufficient disk space. Installation requires
+minimum 2GB free space. To resolve: 1) Check available disk space,
+2) Free up space if needed, 3) Retry installation..."
+
+Agent: "Based on the documentation, error E4012 means insufficient
+disk space. Let me provide a clear solution."
+
+Response to user:
+"Error E4012 indicates you don't have enough disk space for installation.
+You'll need at least 2GB free.
+
+To resolve:
+1. Check your available disk space
+2. Free up space by removing unnecessary files
+3. Try the installation again
+
+Would you like help checking your disk space or troubleshooting
+if this doesn't resolve the issue?"
+```
+
+**Value delivered:**
+- Accurate answer based on actual documentation
+- Agent reasoned about when to search
+- User gets correct information quickly
+- Scales to thousands of error codes without agent remembering each
+
+## Looking Forward
+
+RAG solves the knowledge access problem by dynamically retrieving relevant information and including it in the agent's context. This pattern is essential for agents that need to work with proprietary, current, or extensive knowledge bases.
+
+But even with perfect knowledge and great tools, agents will make mistakes. They're probabilistic systems, not deterministic ones. The next chapter addresses this head-on: handling agent mistakes.
+
+Understanding how agents fail and designing systems that account for imperfection is crucial for building production-ready agent systems.
+
+Perfect tools, perfect knowledge, imperfect execution—that's the reality we must design for.

@@ -1,0 +1,575 @@
+# Handling Agent Mistakes {#sec-handling-mistakes}
+
+*Building systems that account for imperfection*
+
+Let's address the uncomfortable truth that everyone building with agents must face: **Agents make mistakes.**
+
+They hallucinate facts. They misunderstand instructions. They use tools incorrectly. They make confident assertions that are completely wrong. They take wrong turns in multi-step processes.
+
+This is not a bug. It's not a sign of a poorly designed system. It's the fundamental nature of probabilistic AI systems.
+
+This chapter explores why agents make mistakes, how agent errors differ from traditional software bugs, and—most importantly—strategies for building systems that account for and mitigate these inevitable imperfections.
+
+## The Fundamental Reality: Agents Make Mistakes
+
+Unlike traditional software, where bugs can theoretically be eliminated through sufficient testing and debugging, agent mistakes cannot be engineered away entirely.
+
+### Types of Agent Mistakes
+
+**Hallucination:**
+The agent generates plausible-sounding but false information.
+
+Example:
+```
+User: "What was our Q3 revenue?"
+Agent: "Q3 revenue was $4.2M, representing 23% growth YoY."
+```
+
+Reality: The agent doesn't have access to this data and made up numbers that sound plausible.
+
+**Instruction misinterpretation:**
+The agent misunderstands what you asked for.
+
+Example:
+```
+You: "Delete duplicate entries from the customer database"
+Agent: Deletes customers with duplicate emails (keeping only one)
+```
+
+You meant: Keep all customers but remove duplicate records where the same customer was entered twice (merge them).
+
+**Tool misuse:**
+The agent calls a tool with incorrect parameters or uses the wrong tool.
+
+Example:
+```
+Agent needs to update customer record
+Agent calls: delete_customer(customer_id) instead of update_customer(customer_id, fields)
+```
+
+**Reasoning errors:**
+The agent follows faulty logic to reach wrong conclusions.
+
+Example:
+```
+Agent sees: Sales dropped 20% in January
+Agent concludes: "The product is failing, recommend discontinuing"
+```
+
+Missing context: January is always slow due to seasonality; this is normal.
+
+**Incomplete execution:**
+The agent stops before completing the task or skips necessary steps.
+
+Example:
+```
+Task: "Generate report and email to stakeholders"
+Agent: Generates perfect report, saves it, stops
+Agent: Forgets to send the email
+```
+
+### Why This Is Different
+
+**Traditional software bugs:**
+- Deterministic: Same input → same wrong output
+- Fixable: Find the bug, correct the code, bug is gone
+- Testable: Write test, verify fix, regression tests prevent recurrence
+- Root-causable: Can trace to specific line of code
+
+**Agent mistakes:**
+- Non-deterministic: Same input may produce different outputs
+- Not always "fixable": Improving prompts helps but doesn't eliminate errors
+- Hard to test comprehensively: Infinite input variations
+- Emergent: Result of complex probabilistic reasoning, not a specific "bug"
+
+This requires a fundamentally different approach to reliability.
+
+## Why Agents Make Mistakes
+
+Understanding the causes helps you design mitigation strategies.
+
+### 1. Hallucination Is Inherent to LLMs
+
+LLMs are trained to predict plausible next tokens. They don't have a "truth database"—they generate based on learned patterns.
+
+When asked a question they don't know the answer to, they generate something that *looks* like an answer based on what answers typically look like.
+
+**Why this happens:**
+- The model learned that questions get answered
+- The model learned what answers look like
+- The model has no mechanism to say "I don't have this information" unless explicitly trained to do so
+- Generating a plausible-sounding answer fits the pattern better than saying "I don't know"
+
+**This is fundamental to how LLMs work.** You can reduce hallucination but not eliminate it.
+
+### 2. Ambiguity in Instructions
+
+Natural language is inherently ambiguous. What's clear to you may have multiple valid interpretations.
+
+"Clean the data" could mean:
+- Remove duplicates
+- Fix formatting
+- Delete invalid entries
+- Normalize values
+- Fill missing values
+- All of the above
+- Something else entirely
+
+The agent picks an interpretation. Sometimes it's not the one you meant.
+
+### 3. Incomplete Context
+
+The agent doesn't know what you know. If critical information isn't in the context, the agent fills gaps with assumptions.
+
+Example:
+```
+You: "Send the report to the team"
+Agent sends to: Engineering team
+```
+
+You meant: Executive team
+
+You knew from context (earlier discussion) which team. The agent didn't have that context.
+
+### 4. Tool Description Mismatches
+
+If a tool's description doesn't perfectly match the agent's interpretation of the task, the agent might:
+- Use the wrong tool
+- Use the right tool with wrong parameters
+- Not use a tool it should use
+
+Example:
+```
+Tool: "update_customer_status"
+Description: "Updates the status field for a customer"
+
+Task: "Mark customer as inactive"
+Agent: Might use update_customer_status(status="inactive")
+      or might look for deactivate_customer tool
+      or might try to use delete_customer
+```
+
+Depends on how the agent interprets "inactive."
+
+### 5. Context Window Limitations
+
+Once the context window fills up, early information gets truncated. The agent may "forget" important context from earlier in the conversation.
+
+Example:
+```
+Early in conversation: "Focus on the North American region only"
+[Long conversation follows]
+Later task: "Analyze sales data"
+Agent: Analyzes all regions (forgot the NA-only constraint)
+```
+
+### 6. Model Limitations
+
+Even the best models have capabilities limits:
+- Complex multi-step reasoning can derail
+- Numerical reasoning is imperfect
+- Maintaining consistency across long outputs is hard
+- Edge cases may be underrepresented in training
+
+## Strategies for Managing Mistakes
+
+You can't eliminate mistakes, but you can design systems that minimize them and handle them gracefully.
+
+### Strategy 1: Have Agents Explain Their Reasoning
+
+**Chain of thought prompting:**
+Ask the agent to show its work.
+
+```
+Instead of:
+"Analyze this data and provide recommendations"
+
+Use:
+"Analyze this data and provide recommendations. Show your reasoning:
+1. What patterns did you observe?
+2. What do these patterns suggest?
+3. What alternatives did you consider?
+4. Why did you choose these recommendations?"
+```
+
+**Benefits:**
+- Easier to spot flawed reasoning
+- Agents actually reason better when explaining (proven effect)
+- You can intervene before bad decisions are acted on
+- Debugging is easier (you see where reasoning went wrong)
+
+**Example:**
+```
+Agent: "I recommend discontinuing Product X.
+
+Reasoning:
+1. Observed: Sales dropped 40% vs last month
+2. This suggests: Product is losing market appeal
+3. Alternatives considered: Price adjustment, marketing push
+4. Chosen recommendation: Discontinue
+
+Rationale: 40% drop indicates fundamental product failure"
+
+You: "Wait—December vs January drop? That's seasonal."
+```
+
+The agent's reasoning reveals the error (missing seasonal context) before any action is taken.
+
+### Strategy 2: Ask Agents to Verify Their Own Work
+
+**Self-verification:**
+Have the agent check its own output.
+
+```
+After generating output:
+
+"Review your answer for:
+1. Factual accuracy: Did you state any facts you're not certain about?
+2. Completeness: Did you address all parts of the question?
+3. Consistency: Are all parts of your answer consistent with each other?
+4. Assumptions: What assumptions did you make? Are they stated?"
+```
+
+**Example:**
+```
+Agent: "Based on the data, Q3 revenue was $4.2M"
+
+Self-check prompt: "Did you actually find Q3 revenue in the data,
+                    or did you infer/estimate it?"
+
+Agent: "Upon review, I don't actually have Q3 data. I should state
+        that Q3 data is not available in the provided files."
+```
+
+The agent catches its own hallucination.
+
+### Strategy 3: Use a Second Agent to Review the First
+
+**Multi-agent verification:**
+One agent produces work, another reviews it.
+
+```
+Agent 1 (Worker): Analyzes data and produces report
+
+Agent 2 (Reviewer):
+"Review this report for:
+- Unsupported claims (are all statements backed by data?)
+- Logical errors (do conclusions follow from evidence?)
+- Missing caveats (are limitations acknowledged?)
+- Alternative interpretations (what else could explain the patterns?)
+
+Provide a critical review."
+```
+
+**Benefits:**
+- Fresh perspective catches errors the first agent missed
+- Reviewer has different "mindset" (critical vs. productive)
+- Works well for high-stakes outputs
+
+**Example:**
+```
+Worker Agent: "Recommend increasing prices 30% based on competitor analysis"
+
+Reviewer Agent: "The competitor analysis only included 2 out of 15 competitors
+                 in our market. The recommendation is based on incomplete data.
+                 Suggest expanding analysis to include more competitors before
+                 making pricing decisions."
+```
+
+### Strategy 4: Build In Human Checkpoints
+
+**Human-in-the-loop for high-stakes decisions:**
+
+```
+For high-impact actions:
+1. Agent prepares action
+2. Agent presents plan to human
+3. Human approves or rejects
+4. Only then does agent execute
+```
+
+**Example:**
+```
+Agent: "I will now delete 847 duplicate customer records. Here are
+        the first 10 for review:
+
+        [Shows sample records to be deleted]
+
+        Proceed? (yes/no)"
+
+Human reviews, catches that "duplicates" include customers with same
+last name but different email addresses (not actually duplicates).```
+
+**When to require approval:**
+- Data deletion or modification at scale
+- Financial transactions
+- External communications (emails, posts)
+- System configuration changes
+- Any irreversible action
+
+### Strategy 5: Design for Reversibility
+
+**Make mistakes recoverable where possible:**
+
+```
+Instead of: DELETE FROM customers WHERE...
+Use: Soft delete (mark as deleted, purge later)
+
+Instead of: Immediate email send
+Use: Queue emails for review before sending
+
+Instead of: Overwrite file
+Use: Create new version, keep history
+```
+
+**Benefits:**
+- Mistakes can be undone
+- You can review before committing
+- Audit trail of what happened
+
+### Strategy 6: Constrain the Agent's Options
+
+**Limit what can go wrong:**
+
+```
+Instead of: "Fix the database performance issue" (agent could do anything)
+
+Use: "Analyze query performance and provide recommendations. You have
+      READ-ONLY access. Do not modify any data or schema."
+```
+
+**Tools with constraints:**
+```python
+def query_database_readonly(sql):
+    # Enforce read-only
+    if any(keyword in sql.upper() for keyword in ['UPDATE', 'DELETE', 'DROP', 'INSERT']):
+        return {"error": "Only SELECT queries allowed"}
+    
+    return execute_query(sql)
+```
+
+**Guardrails prevent entire classes of mistakes.**
+
+### Strategy 7: Provide Examples of Correct Behavior
+
+**Show the agent what "right" looks like:**
+
+```
+"Process customer refunds following this pattern:
+
+Example:
+Customer: John Doe, Order #12345, Amount: $50
+Action taken:
+1. Verified order exists
+2. Confirmed payment was received
+3. Processed refund via original payment method
+4. Sent confirmation email to john@example.com
+5. Updated order status to 'refunded'
+6. Logged action in refund_log table
+
+Follow this same pattern for each refund."
+```
+
+Examples calibrate the agent's behavior.
+
+### Strategy 8: Incremental Validation
+
+**Validate at each step, not just at the end:**
+
+```
+Instead of:
+1. Agent processes 1000 records
+2. Check results
+
+Use:
+1. Agent processes 10 records
+2. Validate results
+3. If correct, continue with next batch
+4. If errors, stop and investigate
+```
+
+**Benefits:**
+- Catch mistakes early
+- Limit damage from errors
+- Easier to debug (smaller scope)
+
+## Specific Patterns for Common Mistakes
+
+### Preventing Hallucination
+
+**Pattern 1: Require citations**
+```
+"Answer based only on the provided documents. For each claim, cite
+the source document and section. If information is not in the
+documents, state 'Information not available in provided documents.'"
+```
+
+**Pattern 2: Explicit uncertainty**
+```
+"If you're not certain about a fact, say so explicitly. Use phrases
+like 'According to the data...' for facts, and 'I'm uncertain but...'
+for inferences."
+```
+
+**Pattern 3: Verification loop**
+```
+After answering: "List the facts you stated. For each fact, indicate:
+- Source of this information
+- Confidence level (high/medium/low)
+- Any assumptions made"
+```
+
+### Preventing Tool Misuse
+
+**Pattern 1: Tool confirmation**
+```
+Before calling a destructive tool:
+"I plan to call delete_customer with customer_id=12345.
+This will permanently delete customer John Doe's account.
+Confirm: yes/no"
+```
+
+**Pattern 2: Dry-run mode**
+```
+"First, describe what actions you would take WITHOUT actually
+performing them. I'll confirm before you execute."
+```
+
+**Pattern 3: Clear tool descriptions**
+```
+Tool: delete_customer
+Description: "PERMANENTLY deletes a customer and ALL associated data.
+             This CANNOT be undone. Use only when customer has
+             explicitly requested account deletion AND has confirmed
+             they understand data will be lost.
+             For deactivating accounts, use deactivate_customer instead."
+```
+
+### Preventing Incomplete Execution
+
+**Pattern 1: Task checklists**
+```
+"Complete all of these steps:
+□ Generate report
+□ Save to shared drive
+□ Email to stakeholders
+□ Update status in tracking system
+
+Confirm each step as you complete it."
+```
+
+**Pattern 2: Explicit completion criteria**
+```
+"The task is complete when:
+1. All data is processed
+2. Results are validated
+3. Output file exists at specified location
+4. Confirmation email is sent
+
+Do not mark task as complete until all criteria are met."
+```
+
+## Accepting Imperfection
+
+Here's the hard truth: **You cannot achieve 100% reliability through better prompts alone.**
+
+Agents will make mistakes. The question is not "how do I prevent all mistakes?" but "how do I design a system that works well despite inevitable mistakes?"
+
+### The Mental Model Shift
+
+**Traditional software mindset:**
+"Find and fix all bugs. Achieve deterministic correctness."
+
+**Agent system mindset:**
+"Reduce error rate. Detect errors quickly. Mitigate impact when errors occur."
+
+It's more like managing a team of humans than debugging software. You hire good people, provide clear instructions, implement review processes, and design systems that catch mistakes before they cause damage.
+
+You don't expect humans to be perfect. Don't expect agents to be either.
+
+### When Is "Good Enough" Good Enough?
+
+Different tasks have different tolerance for errors:
+
+**High tolerance:**
+- Drafting content (human reviews before publishing)
+- Exploratory data analysis (human interprets results)
+- Brainstorming and ideation (bad ideas easily filtered)
+
+**Medium tolerance:**
+- Customer support responses (mistakes are fixable, but undesirable)
+- Code generation (tests catch errors)
+- Report generation (human spot-checks)
+
+**Low tolerance:**
+- Financial transactions (mistakes costly)
+- Legal document generation (mistakes have consequences)
+- Medical decisions (mistakes dangerous)
+
+**Zero tolerance:**
+- Critical infrastructure control
+- Safety systems
+- Anything where a mistake could cause harm
+
+**Match your approach to tolerance:**
+- High tolerance: Minimal safeguards, fast iteration
+- Medium tolerance: Review processes, validation checks
+- Low tolerance: Multi-layer verification, human approval
+- Zero tolerance: Don't use agents (or use heavily constrained workflows)
+
+## What Error Handling Is and Is Not
+
+Let's clarify the approach:
+
+### What Error Handling for Agents Is
+
+**Accepting imperfection and designing around it**
+
+Acknowledging that:
+- Agents will make mistakes
+- Many mistakes can be prevented with good design
+- Remaining mistakes must be caught and handled
+- System design determines impact of mistakes
+
+**Implementing layers of defense:**
+- Clear instructions (reduce mistakes)
+- Self-verification (catch mistakes early)
+- Human checkpoints (prevent high-impact errors)
+- Reversibility (recover from mistakes)
+- Monitoring (detect mistakes in production)
+
+**Risk management:**
+Understanding where mistakes matter most and concentrating safeguards there.
+
+### What Error Handling for Agents Is Not
+
+**Expecting to achieve 100% reliability through better prompts**
+
+You can't prompt your way to perfection. Hallucination is inherent. Reasoning errors happen. Non-determinism means variability.
+
+**Treating agents like traditional software**
+
+"If I just debug this prompt, the agent will always work correctly" is false. Agents are probabilistic, not deterministic.
+
+**Giving up on reliability**
+
+Just because perfection is impossible doesn't mean "anything goes." Good design dramatically improves reliability.
+
+## Practical Takeaways
+
+1. **Agents will make mistakes** - this is fundamental, not fixable
+2. **Design with this in mind** - don't be surprised when it happens
+3. **Use multiple strategies** - no single approach eliminates all errors
+4. **Match safeguards to stakes** - critical operations need more protection
+5. **Embrace review processes** - human and automated verification both help
+6. **Design for reversibility** - make mistakes recoverable when possible
+7. **Monitor and learn** - track what goes wrong, improve over time
+8. **Accept "good enough"** - perfect is impossible, excellent is achievable
+
+## Looking Ahead
+
+Understanding that agents make mistakes leads naturally to the next question: When should humans be involved in the loop?
+
+The next chapter explores human-in-the-loop patterns in depth—the spectrum of human involvement from AI-assisted to fully autonomous, how to choose the right level for each task, and how to implement effective approval workflows.
+
+Agents aren't replacements for humans. They're collaborators. The question is: what's the right division of labor?

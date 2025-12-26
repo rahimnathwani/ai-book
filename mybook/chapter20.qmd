@@ -1,0 +1,628 @@
+# Getting Started — A Practical Path {#sec-getting-started}
+
+*From experimentation to production*
+
+You've read the book. You understand agents, tools, prompts, patterns, and pitfalls. Now what?
+
+This final chapter provides a concrete, step-by-step path for adopting agent systems in your organization—from personal experimentation to team workflows to production systems. No theory, just practical next steps.
+
+## Phase 1: Personal Experimentation (Week 1-2)
+
+**Goal:** Build intuition through direct experience.
+
+### Step 1: Install an Agent Harness
+
+**Pick one and install it:**
+
+**Claude Code:**
+```bash
+npm install -g @anthropic-ai/claude-code
+claude-code init
+```
+
+**Cursor:**
+```
+Download from cursor.sh
+Install and open
+```
+
+**Or use web interface:**
+- Claude.ai (has web search, code execution)
+- ChatGPT Plus (has plugins, code interpreter)
+
+**Choose based on:** What you're comfortable with. They all work for learning.
+
+### Step 2: Use It for Your Own Tasks
+
+**Start with real work, not toy examples:**
+
+**Good first tasks:**
+```
+- "Analyze this CSV of sales data and identify trends"
+- "Review this code and suggest improvements"
+- "Write a Python script to rename these files by date"
+- "Summarize these meeting notes and extract action items"
+- "Debug why this script is failing"
+```
+
+**What you're learning:**
+- How to phrase requests
+- What agents can/can't do
+- How long tasks take
+- What kinds of mistakes happen
+- When you need to clarify vs. when agent understands
+
+### Step 3: Experiment with Different Approaches
+
+**Try variations:**
+
+**Vague → Specific:**
+```
+Try: "Fix this code"
+Then: "Fix this code so it handles null inputs gracefully and adds
+       error logging. Ensure all tests pass."
+
+Notice: Specificity improves results
+```
+
+**No examples → With examples:**
+```
+Try: "Generate customer email"
+Then: "Generate customer email following this style: [example]"
+
+Notice: Examples calibrate output
+```
+
+**Let agent figure it out → Give it steps:**
+```
+Try: "Analyze customer churn"
+Then: "Analyze customer churn by: 1) Loading data, 2) Calculating
+       retention rates by cohort, 3) Identifying patterns, 4) Suggesting
+       interventions"
+
+Notice: Structure helps complex tasks
+```
+
+### Step 4: Document What Works
+
+**Keep a note file:**
+
+```markdown
+# What Works
+
+## Good prompts:
+- "Analyze X by doing 1, 2, 3"
+- "Extract [specific fields] from [data] as JSON"
+- "Review [code] for [specific criteria]"
+
+## Common mistakes I see:
+- Agent hallucinates dates if not in data
+- Needs explicit reminder to show reasoning
+- Better at Python than bash for complex scripts
+
+## Time/cost observations:
+- Simple tasks: 5-10 seconds, ~$0.01
+- Complex analysis: 30-60 seconds, ~$0.10
+```
+
+**By end of Phase 1:**
+- ✓ Used agent for 10-20 real tasks
+- ✓ Understand basic prompting
+- ✓ Know what's easy vs. hard for agents
+- ✓ Have intuition for when to use agents
+
+## Phase 2: Custom Tool Development (Week 3-8)
+
+**Goal:** Connect agents to your systems.
+
+### Step 1: Identify Repetitive Tasks
+
+**Look for tasks where:**
+- You do it regularly
+- It involves multiple steps
+- It's tedious but not difficult
+- It accesses systems you have APIs for
+
+**Examples:**
+```
+✓ "Check if overdue invoices exist, send reminders"
+✓ "Find P0 bugs assigned to my team, summarize for standup"
+✓ "Generate weekly report from analytics data"
+✓ "Update customer records when support tickets resolve"
+```
+
+### Step 2: Build Your First MCP Server
+
+**Start with read-only tools (safer):**
+
+```python
+# Example: Internal wiki search
+from mcp.server import Server
+
+app = Server("company-wiki")
+
+@app.tool()
+def search_wiki(query: str) -> str:
+    """
+    Search company wiki for relevant pages.
+    Use this when you need company policy, process docs, or technical guides.
+
+    Args:
+        query: Search terms describing what you're looking for
+    """
+    results = wiki_api.search(query)
+
+    # Return top 5 results with snippets
+    output = []
+    for result in results[:5]:
+        output.append(f"Title: {result.title}\n{result.snippet}\n")
+
+    return "\n---\n".join(output)
+
+app.run()
+```
+
+**Install and test:**
+```bash
+# Start MCP server
+python wiki_server.py
+
+# Configure Claude Code to use it
+# Add to ~/.claude/config.json
+
+# Test it
+"Search our wiki for the code review process"
+```
+
+### Step 3: Add Write Capabilities (Carefully)
+
+**Once read-only works, add actions:**
+
+```python
+@app.tool()
+def create_ticket(title: str, description: str, priority: str) -> str:
+    """
+    Create a new support ticket.
+
+    Args:
+        title: Brief summary of the issue
+        description: Detailed description
+        priority: One of: low, medium, high, critical
+    """
+    # Validate
+    if priority not in ["low", "medium", "high", "critical"]:
+        return {"error": "Invalid priority"}
+
+    # Create
+    ticket = ticket_api.create(
+        title=title,
+        description=description,
+        priority=priority
+    )
+
+    # Log
+    audit_log(f"Created ticket {ticket.id}: {title}")
+
+    return {
+        "ticket_id": ticket.id,
+        "url": ticket.url
+    }
+```
+
+**Safety tips:**
+- Start with low-risk actions
+- Add logging
+- Test thoroughly
+- Consider approval workflows for important actions
+
+### Step 4: Build a Tool Library
+
+**Over weeks, accumulate tools:**
+
+```
+my_mcp_servers/
+├── wiki_server.py          # Search internal wiki
+├── ticket_server.py        # Ticket management
+├── analytics_server.py     # Query analytics
+├── hr_server.py           # HR data (read-only)
+└── notification_server.py  # Send Slack messages
+```
+
+**By end of Phase 2:**
+- ✓ Built 3-5 custom MCP tools
+- ✓ Agent can access your systems
+- ✓ Automated several repetitive tasks
+- ✓ Team members asking "how'd you do that?"
+
+## Phase 3: Team Workflows (Month 3-6)
+
+**Goal:** Scale agent usage across team.
+
+### Step 1: Document Successful Patterns
+
+**Create runbook for common tasks:**
+
+```markdown
+# Agent Runbook
+
+## Generate Weekly Team Report
+
+**Prompt:**
+"Generate our weekly team report using these data sources:
+
+1. Check analytics_database for user signups (last 7 days)
+2. Query ticket system for open P0/P1 issues
+3. Get deployment count from CI/CD
+4. Check wiki for this week's incidents
+
+Format as markdown with sections: Metrics, Issues, Deployments, Incidents"
+
+**Expected time:** 30 seconds
+**Expected cost:** ~$0.05
+**Success criteria:** Report has all 4 sections with current data
+
+## Code Review Assistance
+
+**Prompt:**
+"Review this PR for:
+- Code quality issues
+- Security vulnerabilities
+- Performance problems
+- Test coverage gaps
+
+Provide specific line numbers and suggestions."
+
+**Expected time:** 45 seconds
+**Expected cost:** ~$0.15
+**Success criteria:** Catches real issues, minimal false positives
+```
+
+### Step 2: Train Team Members
+
+**Run workshops:**
+
+**Week 1: Introduction (1 hour)**
+- What agents are
+- Demo: Agent solving real task
+- Hands-on: Everyone tries a simple task
+- Homework: Use agent for 3 tasks this week
+
+**Week 2: Effective Prompting (1 hour)**
+- Review common mistakes
+- Practice: Improving vague prompts
+- Patterns that work
+- Q&A on their experience
+
+**Week 3: Custom Tools (1 hour)**
+- Show MCP servers you built
+- How to use them
+- What's possible
+- Ideas for new tools
+
+### Step 3: Establish Best Practices
+
+**Create team guidelines:**
+
+```markdown
+# Agent Usage Guidelines
+
+## When to Use Agents
+✓ Data analysis and reporting
+✓ Code review assistance
+✓ Documentation generation
+✓ Repetitive multi-step tasks
+
+## When NOT to Use Agents
+✗ Critical production changes without review
+✗ Customer-facing communication without approval
+✗ Anything requiring 100% accuracy
+✗ Sensitive security operations
+
+## Safety Rules
+1. Always review before committing changes
+2. Verify data before sharing externally
+3. Don't include sensitive credentials in prompts
+4. Use approval workflows for customer-facing actions
+
+## Cost Management
+- Prefer cheaper models for simple tasks
+- Don't include massive files in every prompt
+- Use RAG/tools instead of context dumping
+- Track spending per team
+```
+
+### Step 4: Create Shared Tools and Templates
+
+**Build team library:**
+
+```
+team_agents/
+├── tools/                  # Shared MCP servers
+│   ├── company_data/
+│   ├── development/
+│   └── operations/
+├── prompts/               # Reusable prompt templates
+│   ├── code_review.md
+│   ├── data_analysis.md
+│   └── incident_response.md
+└── docs/                  # How-to guides
+    ├── getting_started.md
+    ├── common_tasks.md
+    └── troubleshooting.md
+```
+
+**By end of Phase 3:**
+- ✓ Team using agents regularly
+- ✓ Shared tools and knowledge
+- ✓ Established best practices
+- ✓ Measurable productivity gains
+
+## Phase 4: Production Systems (Month 6-12)
+
+**Goal:** Deploy agents for mission-critical workflows.
+
+### Step 1: Build Monitoring and Alerting
+
+**Don't deploy without observability:**
+
+```python
+class ProductionAgent:
+    def __init__(self):
+        self.monitor = AgentMonitor()
+        self.budget = BudgetController(daily_limit=100)
+
+    def execute_task(self, task):
+        # Check budget
+        self.budget.check()
+
+        # Execute
+        try:
+            start = time.time()
+            result = self.agent.run(task)
+            latency = time.time() - start
+
+            # Log success
+            self.monitor.log_success(
+                task_type=task.type,
+                latency=latency,
+                cost=result.cost
+            )
+
+            return result
+
+        except Exception as e:
+            # Log failure
+            self.monitor.log_failure(
+                task_type=task.type,
+                error=str(e)
+            )
+
+            # Alert if critical
+            if task.priority == "high":
+                self.alert_team(f"Agent task failed: {e}")
+
+            raise
+```
+
+### Step 2: Implement Proper Security Controls
+
+**Checklist:**
+- [ ] Agents run in sandboxed environments
+- [ ] Least-privilege tool access
+- [ ] All actions logged to audit trail
+- [ ] High-risk actions require approval
+- [ ] Credentials stored securely (not in code)
+- [ ] Regular security reviews scheduled
+
+### Step 3: Establish Feedback Loops
+
+**Continuous improvement:**
+
+```python
+class FeedbackSystem:
+    def collect_user_rating(self, task_id, rating, comment):
+        """Users rate agent outputs 1-5"""
+        self.db.store_feedback(task_id, rating, comment)
+
+    def weekly_analysis(self):
+        """Analyze feedback trends"""
+        low_rated = self.db.query("""
+            SELECT task_type, avg(rating), count(*)
+            FROM feedback
+            WHERE rating <= 2
+            AND week = current_week()
+            GROUP BY task_type
+        """)
+
+        # Identify problem areas
+        for task_type, avg_rating, count in low_rated:
+            if count >= 10 and avg_rating < 2.5:
+                self.alert_team(
+                    f"Low satisfaction for {task_type}: {avg_rating}/5"
+                )
+
+    def improve_prompts(self):
+        """Use feedback to refine"""
+        # Analyze common issues
+        # Update prompts
+        # A/B test improvements
+        # Deploy winners
+```
+
+### Step 4: Create Incident Response Plan
+
+**When things go wrong:**
+
+```markdown
+# Agent Incident Response
+
+## Severity 1: Agent caused data loss/corruption
+1. Immediately revoke all agent access
+2. Assess scope of damage
+3. Begin data recovery
+4. Incident postmortem within 24 hours
+5. Don't re-enable until root cause fixed
+
+## Severity 2: Agent making consistent mistakes
+1. Pause affected workflows
+2. Review recent agent logs
+3. Identify pattern
+4. Fix prompt/tool/constraint
+5. Test fix thoroughly
+6. Resume with monitoring
+
+## Severity 3: Performance degradation
+1. Check for context window issues
+2. Review recent prompt changes
+3. Check model availability
+4. Optimize if needed
+5. Monitor cost/latency trends
+```
+
+**By end of Phase 4:**
+- ✓ Agents running production workflows
+- ✓ Monitoring and alerting in place
+- ✓ Security controls implemented
+- ✓ Feedback-driven improvement
+- ✓ Incident response capability
+
+## Phase 5: Custom Infrastructure (If Needed)
+
+**Most teams stop at Phase 4.** Only proceed if:
+- Clear limitations of existing tools
+- Proven ROI justifies investment
+- Team has capacity
+- Long-term commitment to maintenance
+
+**If building custom:**
+
+**Month 1-2: Proof of concept**
+- Build minimal viable harness
+- Implement core agentic loop
+- Add 2-3 essential tools
+- Test with real tasks
+
+**Month 3-4: Production features**
+- Context window management
+- Error handling and retries
+- Logging and observability
+- Security sandboxing
+
+**Month 5-6: Polish and deploy**
+- User interface
+- Documentation
+- Testing
+- Gradual rollout
+
+**Ongoing: Maintain**
+- Bug fixes
+- Feature requests
+- Performance optimization
+- Model updates
+
+## Measuring Success
+
+**Track these metrics:**
+
+**Adoption:**
+- % of team using agents
+- Tasks automated
+- Time saved per week
+
+**Quality:**
+- User satisfaction ratings
+- Error rate
+- Review/revision rate
+
+**Economics:**
+- Cost per task
+- ROI (time saved × labor rate - agent cost)
+- Payback period
+
+**Example success story:**
+```
+Team: 10 engineers
+Time saved: 5 hours/person/week
+Value: 50 hours/week × $75/hour = $3,750/week
+Agent cost: ~$500/month (~$125/week)
+Net benefit: $3,625/week
+Payback: Immediate
+```
+
+## Common Pitfalls to Avoid
+
+1. **Skipping experimentation phase**
+   - Don't jump straight to production
+   - Build intuition first
+
+2. **Trying to automate everything**
+   - Start with high-value, low-risk tasks
+   - Expand gradually
+
+3. **Insufficient testing**
+   - Test thoroughly before deploying
+   - Have rollback plan
+
+4. **Ignoring security**
+   - Design security in from start
+   - Don't bolt it on later
+
+5. **No monitoring**
+   - Deploy with observability
+   - You can't fix what you can't see
+
+6. **Underestimating change management**
+   - Team needs training
+   - Expect learning curve
+   - Support adoption
+
+## The Journey Ahead
+
+This book has equipped you with knowledge. Now comes action.
+
+**Your next steps:**
+
+**This week:**
+- [ ] Install an agent harness
+- [ ] Complete 3 real tasks with it
+- [ ] Note what works and what doesn't
+
+**This month:**
+- [ ] Identify 2-3 repetitive tasks to automate
+- [ ] Build your first MCP tool
+- [ ] Share results with a colleague
+
+**This quarter:**
+- [ ] Train your team
+- [ ] Build shared tool library
+- [ ] Measure productivity impact
+
+**This year:**
+- [ ] Deploy to production workflows
+- [ ] Establish best practices
+- [ ] Measure ROI
+- [ ] Expand capabilities
+
+## Final Thoughts
+
+Agent technology is maturing rapidly. What's cutting-edge today will be commonplace tomorrow. The IT professionals who learn to work effectively with agents now will have a significant advantage.
+
+But remember:
+
+**Agents are tools, not magic.** They augment human capabilities; they don't replace human judgment.
+
+**Start small, learn fast.** Don't try to boil the ocean. Prove value incrementally.
+
+**Focus on real problems.** Don't use agents because they're cool. Use them because they solve actual pain points.
+
+**Embrace imperfection.** Agents make mistakes. Design for that reality.
+
+**Keep learning.** This field evolves monthly. Stay current.
+
+The future of IT work involves collaborating with AI agents. The question isn't whether to adopt this technology—it's how quickly and how well you do it.
+
+Welcome to the age of agents. Now go build something useful.
+
+---
+
+*This concludes "AI Agents for the IT Professional." Thank you for reading. Now go forth and automate.*

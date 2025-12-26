@@ -1,0 +1,579 @@
+# Multi-Agent Systems {#sec-multi-agent}
+
+*When one agent isn't enough*
+
+So far, we've discussed single agents: one AI system with tools, tackling tasks. But what if the task is too complex for one agent? What if different subtasks require different expertise or access levels?
+
+Enter multi-agent systems—architectures where multiple agents work together, each with specialized roles and capabilities.
+
+This chapter explores when and why you'd use multiple agents, common patterns for organizing them, challenges of coordination, and when multi-agent approaches make sense (and when they don't).
+
+## Why Multiple Agents?
+
+Single agents are powerful. Why complicate things with multiple?
+
+### 1. Separation of Concerns
+
+**Different agents for different domains:**
+
+```
+Customer Support System:
+├── Routing Agent
+│   └── Classifies incoming requests
+│   └── Routes to appropriate specialist
+├── Billing Agent
+│   └── Handles payment issues
+│   └── Access to payment systems only
+├── Technical Support Agent
+│   └── Debugs product issues
+│   └── Access to logs and diagnostics
+└── Escalation Agent
+    └── Handles complex cases
+    └── Can create tickets for human review
+```
+
+**Benefits:**
+- Clear responsibilities
+- Limited blast radius (each agent has different permissions)
+- Easier to maintain (change one without affecting others)
+- Easier to test (test each independently)
+
+### 2. Different Capabilities or Access Levels
+
+**Security through separation:**
+
+```
+Code Review System:
+├── Analysis Agent (Read-Only)
+│   └── Reads code, runs linters
+│   └── Cannot modify anything
+└── Fix Agent (Write Access)
+    └── Applies approved fixes
+    └── Only acts after human approval
+```
+
+One agent analyzes, another acts. The analyst can't cause damage even if compromised.
+
+### 3. Adversarial Patterns (Worker + Critic)
+
+**One agent produces, another critiques:**
+
+```
+Report Generation:
+1. Writer Agent: Generates report
+2. Reviewer Agent: Critiques report
+   - Checks for unsupported claims
+   - Identifies logical gaps
+   - Suggests improvements
+3. Writer Agent: Revises based on feedback
+4. Repeat until quality threshold met
+```
+
+**Why this works:**
+- Different "mindsets" (creative vs. critical)
+- Catches errors the writer missed
+- Iterative refinement
+- Higher quality output
+
+### 4. Specialized Expertise
+
+**Different agents trained/prompted for different domains:**
+
+```
+Medical Chart Analysis:
+├── Radiology Agent
+│   └── Interprets imaging reports
+├── Lab Results Agent
+│   └── Analyzes bloodwork and tests
+└── Synthesis Agent
+    └── Combines insights from specialists
+    └── Generates comprehensive assessment
+```
+
+Each agent has specialized knowledge and tools for its domain.
+
+## Common Multi-Agent Patterns
+
+### Pattern 1: Planner + Workers
+
+**One agent plans, others execute:**
+
+```
+Architecture:
+┌─ Planner Agent ──────────────────────┐
+│ Breaks down complex task into steps │
+│ Decides which worker handles each   │
+└──────────────┬───────────────────────┘
+               │
+        ┌──────┴──────┐
+        │             │
+┌───────▼──────┐ ┌───▼──────────┐
+│ Worker Agent │ │ Worker Agent │
+│ Executes     │ │ Executes     │
+│ Step 1       │ │ Step 2       │
+└──────────────┘ └──────────────┘
+```
+
+**Example: Data Pipeline**
+
+```python
+# Planner Agent
+plan = planner.create_plan("""
+Extract data from API, clean it, analyze trends, generate report
+""")
+
+# Plan created:
+{
+    "steps": [
+        {"agent": "data_extraction", "task": "Fetch from API"},
+        {"agent": "data_cleaning", "task": "Remove nulls, standardize"},
+        {"agent": "analysis", "task": "Identify trends"},
+        {"agent": "reporting", "task": "Generate PDF report"}
+    ]
+}
+
+# Execute plan
+for step in plan.steps:
+    worker = agents[step.agent]
+    result = worker.execute(step.task)
+    context[step.agent] = result
+
+final_report = context["reporting"]
+```
+
+**When to use:**
+- Complex tasks with clear subtasks
+- Different workers have different tools
+- Want to separate planning from execution
+
+### Pattern 2: Reviewer Pattern
+
+**One agent works, another reviews:**
+
+```python
+# Worker creates content
+draft = writer_agent.generate("""
+Write a blog post about AI agents for IT professionals
+""")
+
+# Reviewer critiques
+review = reviewer_agent.review(draft, criteria="""
+- Technical accuracy
+- Clarity for target audience
+- Appropriate length (500-700 words)
+- Engaging introduction
+- Clear takeaways
+""")
+
+# Iterate if needed
+if review.score < 4.0:
+    revised = writer_agent.revise(draft, review.feedback)
+else:
+    approved = draft
+```
+
+**Benefits:**
+- Higher quality output
+- Catches errors
+- Different perspectives
+- Automated quality control
+
+**When to use:**
+- Quality-sensitive outputs
+- Risk of errors in complex tasks
+- When thoroughness matters more than speed
+
+### Pattern 3: Escalation Hierarchy
+
+**Agents handle what they can, escalate what they can't:**
+
+```
+Request arrives
+    ↓
+┌─ L1 Agent (Simple Cases) ────────┐
+│ Handles routine requests         │
+│ 80% of volume                     │
+└───┬───────────────────────────────┘
+    │ Too complex?
+    ↓
+┌─ L2 Agent (Moderate Cases) ──────┐
+│ Handles nuanced situations        │
+│ 15% of volume                     │
+└───┬───────────────────────────────┘
+    │ Still too complex?
+    ↓
+┌─ Human Expert ────────────────────┐
+│ Handles edge cases                │
+│ 5% of volume                      │
+└───────────────────────────────────┘
+```
+
+**Implementation:**
+
+```python
+def handle_request(request):
+    # Try L1 agent
+    result, confidence = l1_agent.process(request)
+
+    if confidence > 0.9:
+        return result
+
+    # Escalate to L2
+    result, confidence = l2_agent.process(request)
+
+    if confidence > 0.8:
+        return result
+
+    # Escalate to human
+    return escalate_to_human(request, reason="Complex case")
+```
+
+**Benefits:**
+- Efficient resource use (cheap agent handles most)
+- Quality maintained (hard cases get expertise)
+- Scales well (most requests automated)
+
+### Pattern 4: Pipeline
+
+**Each agent handles one stage:**
+
+```
+Input
+  ↓
+┌─ Stage 1: Extraction Agent ──┐
+│ Pulls data from sources      │
+└──────┬────────────────────────┘
+       ↓
+┌─ Stage 2: Validation Agent ──┐
+│ Checks data quality           │
+└──────┬────────────────────────┘
+       ↓
+┌─ Stage 3: Analysis Agent ────┐
+│ Generates insights            │
+└──────┬────────────────────────┘
+       ↓
+┌─ Stage 4: Formatting Agent ──┐
+│ Creates final output          │
+└──────┬────────────────────────┘
+       ↓
+Output
+```
+
+**Each agent specializes in one transformation.**
+
+**When to use:**
+- Multi-step processes
+- Clear stage boundaries
+- Each stage has different requirements
+- Want to test/optimize stages independently
+
+### Pattern 5: Consensus/Voting
+
+**Multiple agents generate answers, select best:**
+
+```python
+# Multiple agents tackle same problem
+agent1_answer = agent1.solve(problem)
+agent2_answer = agent2.solve(problem)
+agent3_answer = agent3.solve(problem)
+
+# Judge evaluates
+scores = [
+    judge.evaluate(agent1_answer),
+    judge.evaluate(agent2_answer),
+    judge.evaluate(agent3_answer)
+]
+
+# Select best
+best_answer = [agent1_answer, agent2_answer, agent3_answer][argmax(scores)]
+```
+
+**Or voting:**
+
+```python
+answers = [agent.solve(problem) for agent in agents]
+# Each answer is a classification
+final_answer = mode(answers)  # Majority vote
+```
+
+**When to use:**
+- High-stakes decisions
+- Want error reduction through redundancy
+- Can afford multiple agent calls
+- Problem has objective answer
+
+## Coordination Challenges
+
+Multi-agent systems introduce complexity.
+
+### Challenge 1: Shared Context and State
+
+**How do agents share information?**
+
+**Option A: Shared memory**
+```python
+class SharedContext:
+    def __init__(self):
+        self.data = {}
+
+    def set(self, key, value):
+        self.data[key] = value
+
+    def get(self, key):
+        return self.data.get(key)
+
+# Agents share context
+context = SharedContext()
+agent1.execute(task1, context)
+agent2.execute(task2, context)  # Can access what agent1 stored
+```
+
+**Option B: Message passing**
+```python
+# Agent 1 sends message to Agent 2
+message = {
+    "from": "agent1",
+    "to": "agent2",
+    "data": result_from_agent1
+}
+message_bus.send(message)
+
+# Agent 2 receives
+message = message_bus.receive("agent2")
+agent2.process(message.data)
+```
+
+**Option C: Orchestrator manages state**
+```python
+class Orchestrator:
+    def __init__(self):
+        self.state = {}
+
+    def run_workflow(self):
+        # Agent 1
+        result1 = agent1.execute()
+        self.state["step1_result"] = result1
+
+        # Agent 2 (orchestrator provides context)
+        result2 = agent2.execute(previous_result=self.state["step1_result"])
+        self.state["step2_result"] = result2
+```
+
+### Challenge 2: Conflict Resolution
+
+**What if agents disagree?**
+
+```python
+# Scenario: Two agents analyzing same data
+agent1_conclusion = "Revenue is declining"
+agent2_conclusion = "Revenue is stable with seasonal variation"
+
+# Who's right?
+```
+
+**Strategies:**
+
+**1. Hierarchical (one agent has authority)**
+```python
+if agent1.authority_level > agent2.authority_level:
+    final_decision = agent1_conclusion
+```
+
+**2. Evidence-based (most evidence wins)**
+```python
+score1 = count_supporting_evidence(agent1_conclusion, data)
+score2 = count_supporting_evidence(agent2_conclusion, data)
+final_decision = agent1_conclusion if score1 > score2 else agent2_conclusion
+```
+
+**3. Human arbiter**
+```python
+if agent1_conclusion != agent2_conclusion:
+    final_decision = ask_human_to_decide(agent1_conclusion, agent2_conclusion)
+```
+
+### Challenge 3: Resource Management
+
+**Multiple agents competing for resources:**
+
+```python
+class ResourceManager:
+    def __init__(self):
+        self.api_calls_remaining = 1000
+        self.lock = threading.Lock()
+
+    def request_api_call(self, agent_id, count=1):
+        with self.lock:
+            if self.api_calls_remaining >= count:
+                self.api_calls_remaining -= count
+                return True
+            else:
+                raise ResourceExhaustedError(
+                    f"API budget exhausted. Agent {agent_id} request denied."
+                )
+```
+
+**Consider:**
+- API rate limits
+- Budget constraints
+- Computational resources
+- Database connection pools
+
+### Challenge 4: Debugging Distributed Reasoning
+
+**Problem:** Error in multi-agent system. Which agent caused it?
+
+**Solution: Comprehensive logging**
+
+```python
+class MultiAgentLogger:
+    def log_agent_action(self, agent_id, action, input, output):
+        entry = {
+            "timestamp": now(),
+            "agent_id": agent_id,
+            "action": action,
+            "input": input,
+            "output": output
+        }
+        self.audit_log.append(entry)
+
+    def trace_execution(self, task_id):
+        # Show full execution trace
+        entries = [e for e in self.audit_log if e.get("task_id") == task_id]
+
+        for entry in entries:
+            print(f"[{entry['timestamp']}] {entry['agent_id']}: {entry['action']}")
+            if entry.get("error"):
+                print(f"  ERROR: {entry['error']}")
+```
+
+## When Multi-Agent Is and Isn't Appropriate
+
+### Use Multi-Agent When:
+
+**Clear subtask boundaries**
+```
+Good: "Extract data → Clean data → Analyze data → Generate report"
+(Each step is distinct)
+```
+
+**Different tools/permissions needed**
+```
+Good: Read-only analyst + Write-access executor
+```
+
+**Quality-critical**
+```
+Good: Writer + Reviewer for important documents
+```
+
+**Separation improves safety**
+```
+Good: Routing agent (low privilege) + Action agent (high privilege, requires approval)
+```
+
+### Don't Use Multi-Agent When:
+
+**It's a single, coherent task**
+```
+Bad: Breaking "analyze this dataset" into multiple agents when one can do it
+(Added complexity, no benefit)
+```
+
+**Agents would just pass everything through**
+```
+Bad: Agent 1 does all work, Agent 2 rubber-stamps it
+(Wasted calls)
+```
+
+**You're trying to fix single-agent reliability**
+```
+Bad: "My agent makes mistakes, I'll add a reviewer agent"
+Better: Fix the underlying agent first, then add review if needed
+```
+
+**Coordination cost exceeds benefit**
+```
+Bad: 5 agents with complex handoffs for simple task
+Better: One agent with good tools
+```
+
+## Practical Multi-Agent Example
+
+**Automated Content Moderation System:**
+
+```python
+class ModerationSystem:
+    def __init__(self):
+        # Multiple specialized agents
+        self.toxicity_agent = ToxicityClassifier()
+        self.spam_agent = SpamDetector()
+        self.policy_agent = PolicyViolationDetector()
+        self.context_agent = ContextAnalyzer()
+        self.decision_agent = ModerationDecider()
+
+    def moderate(self, content):
+        # Parallel analysis
+        toxicity_score = self.toxicity_agent.analyze(content)
+        spam_score = self.spam_agent.analyze(content)
+        policy_violations = self.policy_agent.check(content)
+        context = self.context_agent.analyze(content)
+
+        # Decision agent synthesizes
+        decision = self.decision_agent.decide(
+            toxicity=toxicity_score,
+            spam=spam_score,
+            violations=policy_violations,
+            context=context
+        )
+
+        return decision  # {action: "approve|flag|remove", reason: "..."}
+```
+
+**Why multi-agent here:**
+- Each agent specializes (toxicity vs spam vs policy)
+- Can run in parallel (fast)
+- Decision agent provides oversight
+- Easy to update individual detectors
+- Clear separation of concerns
+
+## What Multi-Agent Systems Are and Are Not
+
+### What They Are
+
+**Architectural patterns for complex problems**
+- Organize complexity through separation
+- Each agent has clear responsibility
+- Coordination through defined interfaces
+
+**Useful when benefits outweigh coordination costs**
+- Different expertise needed
+- Security boundaries help
+- Quality improvement from review
+- Parallel execution possible
+
+### What They Are Not
+
+**A solution to single-agent reliability problems**
+- Fix the agent first
+- Add review/redundancy second
+- Don't paper over poor quality with more agents
+
+**Always better than single agents**
+- Added complexity
+- More failure modes
+- Higher costs
+- Coordination overhead
+
+**Necessary for most applications**
+- Single agents handle most use cases
+- Start simple
+- Add agents when justified
+
+## Looking Ahead
+
+Multi-agent systems showcase the sophistication possible with AI agents. But agents—single or multiple—aren't a universal solution. They have real limitations.
+
+The next chapter confronts these limitations head-on: What are agents bad at? What tasks should you not use them for? Understanding the boundaries is as important as understanding the possibilities.
+
+Because knowing when not to use a tool is part of mastering it.

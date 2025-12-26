@@ -1,0 +1,468 @@
+# The General-Purpose Agent Hiding in Plain Sight {#sec-general-purpose-agent}
+
+*Recognizing that coding agents are actually universal agents*
+
+There's a perception problem in the AI agent space. When you hear "Claude Code" or "GitHub Copilot," you think "coding tool." The name suggests limitation—these are for developers, for programming tasks, for technical work.
+
+But that perception is misleading. What if I told you that the "coding agent" on your machine is actually a general-purpose automation agent that can handle a vast range of business and personal tasks?
+
+This chapter reveals the truth: CLI-based coding agents are not coding-specific. They're general-purpose agents with powerful capabilities that extend far beyond software development. Once you understand this, a world of possibilities opens up.
+
+## Claude Code et al. Are Not Just for Code
+
+Let's start by reexamining what these "coding agents" actually can do.
+
+### The Actual Capabilities
+
+**File system access:**
+- Read any file (text, CSV, JSON, XML, logs, configuration files, documents)
+- Write new files (reports, processed data, generated content)
+- Edit existing files (update configurations, modify data, correct errors)
+- Navigate directory structures
+- Search for files by name or pattern
+
+**Command execution:**
+- Run any terminal command your system supports
+- Execute scripts (Python, JavaScript, bash, PowerShell)
+- Query databases (via CLI clients like `psql`, `mysql`)
+- Make HTTP requests (via `curl`, `wget`)
+- Process data (using `jq`, `awk`, `sed`)
+- Interact with cloud services (AWS CLI, Azure CLI, gcloud)
+- Send emails (via command-line mail clients)
+- Manipulate images (ImageMagick, ffmpeg for video)
+
+**Web access:**
+- Search the web for information
+- Fetch and parse web pages
+- Download resources
+- Query APIs
+
+**Computation:**
+- Write and execute code to process data
+- Perform complex calculations
+- Generate visualizations
+- Transform data between formats
+
+### What This Actually Means
+
+With these capabilities, the agent can handle any task that can be accomplished through:
+
+1. **Reading and writing files**
+2. **Executing commands**
+3. **Processing data**
+4. **Accessing web resources**
+
+That's not a narrow set of programming tasks. That's a massive percentage of knowledge work.
+
+### The Mindset Shift
+
+**Instead of thinking:** "I can ask it to fix bugs and write tests"
+
+**Think:** "I can ask it to accomplish any goal that involves files, commands, and data"
+
+The agent doesn't care whether you're asking it to:
+- Refactor a Python module
+- Process last quarter's sales data
+- Generate a report from log files
+- Download and analyze competitor pricing
+- Automate employee onboarding tasks
+- Consolidate data from multiple APIs
+
+If the task can be broken down into operations the agent's tools support, the agent can attempt it.
+
+## Extending Agents with Custom Tools
+
+The power amplifies when you add custom tools. Most agent harnesses support custom tool development, letting you connect agents to your specific systems and workflows.
+
+### What Custom Tools Enable
+
+**Direct system integration:**
+Instead of the agent using curl to call your API, give it a tool that encapsulates the operation:
+
+```
+Tool: check_inventory
+Description: Checks current inventory levels for a product SKU
+Parameters: sku (string)
+Returns: Quantity available, location, reorder status
+```
+
+Now the agent can check inventory as part of multi-step tasks without needing to know your API endpoints, authentication, or response format.
+
+**Business logic encapsulation:**
+Wrap complex operations in simple tools:
+
+```
+Tool: calculate_customer_lifetime_value
+Description: Calculates predicted lifetime value for a customer
+Parameters: customer_id (string)
+Returns: LTV estimate, confidence level, contributing factors
+```
+
+The agent can use this as a reasoning step without needing to know your LTV algorithm.
+
+**Safe access to restricted systems:**
+Control exactly what the agent can do:
+
+```
+Tool: query_customer_database
+Description: Retrieves customer information (read-only)
+Parameters: customer_id, fields_to_retrieve
+Returns: Requested customer data
+```
+
+The agent can access the database but only through this controlled interface—no direct SQL, no write access, logged and auditable.
+
+### Common Custom Tool Categories
+
+**HR and employee systems:**
+- Query employee records
+- Check PTO balances
+- Retrieve org chart information
+- Access performance review status
+- Look up benefits information
+
+**CRM and customer data:**
+- Search customer records
+- Retrieve order history
+- Check account status
+- Access support ticket history
+- Review customer communications
+
+**Communication platforms:**
+- Send Slack or Teams messages
+- Create calendar events
+- Schedule meetings
+- Send emails (with templates and compliance)
+- Post to internal wikis or documentation
+
+**Business intelligence:**
+- Query data warehouses
+- Retrieve KPI dashboards
+- Access financial reports
+- Check project status
+- Review analytics data
+
+**Operations and infrastructure:**
+- Check service health
+- Query monitoring systems
+- Review deployment status
+- Access log aggregation
+- Check resource utilization
+
+### Tool Development Isn't Complex
+
+Adding a custom tool typically involves:
+
+1. **Define the tool schema** (name, description, parameters)
+2. **Implement the tool function** (what it does when called)
+3. **Register it with the agent harness**
+
+Example (simplified):
+```python
+def check_employee_pto(employee_id: str) -> dict:
+    """Checks PTO balance for an employee"""
+    # Call internal HR API
+    response = hr_api.get_pto_balance(employee_id)
+    return {
+        "employee_id": employee_id,
+        "pto_balance_days": response.balance,
+        "pending_requests": response.pending
+    }
+
+# Register with agent harness
+agent.register_tool(
+    name="check_pto_balance",
+    description="Retrieves current PTO balance for an employee. Use this when you need to know how much time off someone has available.",
+    function=check_employee_pto,
+    parameters={
+        "employee_id": {
+            "type": "string",
+            "description": "The employee's unique identifier"
+        }
+    }
+)
+```
+
+Once registered, the agent can use this tool as naturally as it uses file reading or web search.
+
+## Example: The Manager Review Reminder System
+
+Let's walk through a complete example that demonstrates how a "coding agent" becomes a business process automation agent through custom tools.
+
+### The Business Problem
+
+Your company has quarterly performance reviews. Managers often forget to complete reviews on time, creating HR headaches and impacting employee morale. HR wants an automated system to:
+
+1. Identify overdue reviews
+2. Send personalized reminders to managers
+3. Escalate to directors if reviews are more than 2 weeks overdue
+4. Log all actions for compliance
+
+### The Traditional Approach
+
+Without agents, you'd build:
+- A scheduled job that runs daily
+- Database queries to find overdue reviews
+- Email template logic
+- Escalation rule engine
+- Logging infrastructure
+
+Lots of code, lots of edge cases, lots of maintenance.
+
+### The Agent Approach
+
+**Custom tools you provide:**
+
+```
+Tool: get_overdue_reviews
+Description: Returns all performance reviews that are past their due date
+Returns: List of {review_id, employee_name, manager_name,
+         manager_email, days_overdue, director_email}
+
+Tool: send_email
+Description: Sends an email to specified recipient
+Parameters: to, subject, body
+Returns: {sent: true/false, message_id}
+
+Tool: log_reminder_sent
+Description: Logs that a review reminder was sent
+Parameters: review_id, recipient, message_type
+Returns: {logged: true}
+
+Tool: get_review_history
+Description: Gets the reminder history for a review
+Parameters: review_id
+Returns: List of previous reminders sent
+```
+
+**The task you give the agent:**
+
+```
+Check for overdue performance reviews and send appropriate reminders.
+
+Rules:
+- If review is 1-7 days overdue: Send gentle reminder to manager
+- If review is 8-14 days overdue: Send urgent reminder to manager
+- If review is 15+ days overdue: Send escalation to director and CC manager
+- Don't send more than one reminder per day per review
+- Personalize each message with employee name and days overdue
+- Log every action taken
+```
+
+**What the agent does:**
+
+The agent follows the agentic loop:
+
+1. **Calls `get_overdue_reviews`** to see what needs attention
+2. **For each overdue review:**
+   - Calls `get_review_history` to check if reminder sent today
+   - Evaluates days_overdue against the rules
+   - Composes appropriate message (personalized)
+   - Calls `send_email` with the message
+   - Calls `log_reminder_sent` to record the action
+3. **Adapts to what it finds:**
+   - If no reviews overdue: Reports that everything is on track
+   - If many reviews overdue: Processes systematically
+   - If send_email fails: Logs the error and continues with others
+
+**The actual execution (simplified):**
+
+```
+Agent: Let me check for overdue reviews.
+[Calls get_overdue_reviews]
+
+Agent: I found 5 overdue reviews. Let me process each one.
+
+Review 1: John Smith's review, 3 days overdue, manager: Sarah Johnson
+[Calls get_review_history(review_1)]
+Agent: No reminder sent today. This is 3 days overdue, so gentle reminder.
+[Composes personalized email]
+[Calls send_email to sarah.johnson@company.com]
+[Calls log_reminder_sent]
+
+Review 2: Jane Doe's review, 16 days overdue, manager: Mike Chen,
+         director: Lisa Park
+[Calls get_review_history(review_2)]
+Agent: Last reminder sent 2 days ago. This is 16 days overdue—needs
+       director escalation.
+[Composes escalation email]
+[Calls send_email to lisa.park@company.com, CC mike.chen@company.com]
+[Calls log_reminder_sent]
+
+[Continues through all reviews]
+
+Agent: Completed processing 5 overdue reviews:
+- 3 gentle reminders sent to managers
+- 2 escalations sent to directors
+- All actions logged
+```
+
+### What You Provided vs. What the Agent Provided
+
+**You provided:**
+- The tools (connecting to your systems)
+- The rules (business logic as instructions)
+- The goal (handle overdue reviews appropriately)
+
+**The agent provided:**
+- The reasoning (interpreting the rules for each situation)
+- The sequencing (what order to call tools)
+- The adaptation (handling variations in the data)
+- The persistence (working through all reviews systematically)
+- The content generation (personalizing each message)
+
+You didn't write code that says "if days_overdue > 14, call send_email with this template." You described what success looks like, and the agent figured out how to achieve it.
+
+### The Power of This Approach
+
+**Flexibility:**
+Change the rules by changing the instructions, not rewriting code. "Actually, send escalations at 10 days instead of 15" is a prompt change, not a code deployment.
+
+**Adaptability:**
+The agent handles variations naturally. If a review has unusual circumstances (like an employee on leave), the agent can reason about it if you've provided relevant context or tools.
+
+**Maintainability:**
+The business logic is in readable English, not buried in code. New team members can understand the system by reading the prompt.
+
+**Debuggability:**
+You can see the agent's reasoning: "This review is 16 days overdue, which exceeds the 15-day threshold, so I'm escalating to the director."
+
+## The Key Insight
+
+**If the information is available via API, and the actions are available via API, the agent can probably do the task.**
+
+The agent's value isn't in executing each individual step—your custom tools do that. The agent's value is in:
+
+1. **Reasoning through the multi-step process**
+2. **Handling variations** without explicit programming for each case
+3. **Adapting based on what it finds** during execution
+4. **Working through tasks patiently and systematically**
+5. **Explaining what it's doing and why**
+
+This is what transforms a "coding agent" into a general-purpose automation agent.
+
+## What This Means for IT Professionals
+
+You already have the infrastructure for powerful automation:
+
+**Your existing systems:**
+- HR platforms with APIs
+- CRMs with data access
+- Email and communication tools
+- Databases and data warehouses
+- Monitoring and operations tools
+
+**Your existing knowledge:**
+- Understanding of your business processes
+- Knowledge of your systems and their APIs
+- Awareness of pain points and repetitive tasks
+- Insight into what should be automated
+
+**What you need to add:**
+- Agent harness (Claude Code, or similar)
+- Custom tools connecting to your systems
+- Clear instructions defining the tasks
+
+The general-purpose agent is already available. You just need to connect it to your specific context.
+
+## Examples Beyond Code
+
+Let me drive this home with concrete, non-coding examples:
+
+### Data Analysis and Reporting
+
+**Task:** "Analyze last month's support tickets and create an executive summary"
+
+**What the agent does:**
+- Reads ticket data (CSV, database query, or API call)
+- Writes Python script to analyze patterns
+- Executes analysis
+- Generates charts
+- Writes Markdown report with findings
+- Exports to PDF
+
+**Not coding:** This is business intelligence work.
+
+### Competitive Intelligence
+
+**Task:** "Monitor competitor pricing pages and alert me to changes"
+
+**What the agent does:**
+- Fetches competitor web pages
+- Extracts pricing information
+- Compares to previously saved data
+- Identifies changes
+- Sends alert email with details
+- Updates stored baseline
+
+**Not coding:** This is market research automation.
+
+### Compliance Reporting
+
+**Task:** "Generate this month's data access audit report"
+
+**What the agent does:**
+- Queries access logs from multiple systems
+- Filters for sensitive data access
+- Cross-references with authorized user lists
+- Identifies anomalies
+- Generates formatted compliance report
+- Archives with timestamp
+
+**Not coding:** This is regulatory compliance work.
+
+### Content Operations
+
+**Task:** "Convert all Q4 webinar recordings: create transcripts, extract key quotes, and generate social media snippets"
+
+**What the agent does:**
+- Lists video files
+- Runs transcription (via command-line tool or API)
+- Analyzes transcripts for key moments
+- Extracts compelling quotes
+- Generates social media content
+- Organizes outputs by webinar
+
+**Not coding:** This is content marketing operations.
+
+### System Administration
+
+**Task:** "Check SSL certificates across all our domains and renew any expiring within 30 days"
+
+**What the agent does:**
+- Reads domain list
+- Checks certificate expiration (via openssl commands)
+- Identifies expiring certificates
+- Initiates renewal process (via certbot or API)
+- Verifies new certificates
+- Updates documentation
+- Sends summary report
+
+**Not coding:** This is infrastructure maintenance.
+
+## The Revelation
+
+The "coding agent" label is a accident of history. These agents happened to be built by and for developers first because:
+
+1. Developers had the skills to build and use CLI tools
+2. Code provided a rich, accessible domain for demonstrating agent capabilities
+3. Development workflows naturally fit the file + command paradigm
+
+But the underlying capability—an agent that can read files, execute commands, access APIs, and reason through multi-step tasks—is universally applicable.
+
+**The general-purpose agent is here. It's just camouflaged in developer clothes.**
+
+Once you see past the surface, you realize: Any task that can be broken down into information gathering, processing, and action-taking is within reach.
+
+## What We've Learned
+
+- CLI-based "coding agents" are actually general-purpose automation agents
+- Their capabilities (file access, command execution, web access) enable far more than coding
+- Custom tools extend agents to your specific systems and processes
+- The agent provides reasoning, sequencing, and adaptation
+- You provide tools, rules, and goals
+- The combination enables sophisticated automation without extensive custom development
+
+In the next chapter, we'll dive deep into tool design and the Model Context Protocol (MCP)—the emerging standard that makes custom tools portable across different agent harnesses.
+
+Understanding how to design effective tools is crucial for unlocking the full potential of agents in your organization.
